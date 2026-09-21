@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Plataforma Operacional</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+      <div class="badge">ESTRUTURA V2</div>
+      <h1>Plataforma Operacional</h1>
+      <p>Fundação técnica para GitHub Pages + Supabase.</p>
+
+      <div class="status-grid">
+        <div class="status">
+          <span>GitHub Pages</span>
+          <strong id="githubStatus">OK</strong>
+        </div>
+        <div class="status">
+          <span>Supabase</span>
+          <strong id="supabaseStatus">Testando...</strong>
+        </div>
+      </div>
+
+      <div class="details" id="details">
+        Carregando diagnóstico...
+      </div>
+    </section>
+  </main>
+
+  <script src="config/supabase_config.js"></script>
+  <script src="assets/js/healthcheck.js"></script>
+</body>
+</html>
