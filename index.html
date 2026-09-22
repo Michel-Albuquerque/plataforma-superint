@@ -1516,7 +1516,7 @@ body.access-operacional #view-evolution{
     <form id="loginForm" class="login-form">
       <div class="login-field">
         <label for="loginUsuario">Usuário</label>
-        <input id="loginUsuario" type="text" autocomplete="username" placeholder="Administrador ou Operacional" required>
+        <input id="loginUsuario" type="text" autocomplete="username" placeholder="admin ou oper" required>
       </div>
 
       <div class="login-field">
@@ -1800,9 +1800,8 @@ const sb=(window.supabase&&typeof window.supabase.createClient==="function")?win
 const JUSTIFICATIVAS_ATUAIS=new Map();
 
 const AUTH_LOGIN_MAP={
-  "administrador":"administrador@superintendencia.example",
   "admin":"administrador@superintendencia.example",
-  "operacional":"operacional@superintendencia.example"
+  "oper":"operacional@superintendencia.example"
 };
 
 let CURRENT_ACCESS_PROFILE=null;
@@ -1934,7 +1933,7 @@ loginForm.addEventListener("submit",async event=>{
   const email=emailInternoDoLogin(loginUsuario.value);
 
   if(!email){
-    mostrarErroLogin("Usuário inválido. Utilize Administrador ou Operacional.");
+    mostrarErroLogin("Usuário inválido. Utilize admin ou oper.");
     return;
   }
 
