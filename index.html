@@ -1,37 +1,2982 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Plataforma Operacional</title>
-  <link rel="stylesheet" href="assets/css/app.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise - Superintendência</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --primary:#009B91;
+  --secondary:#F5AA41;
+  --gray:#7F7F7F;
+
+  --primary-dark:#005852;
+  --secondary-dark:#EB8C0A;
+  --gray-dark:#414141;
+
+  --primary-light:#50EBE1;
+  --secondary-light:#FACD91;
+  --gray-light:#CDCDCD;
+
+  --bg:#f5f7f7;
+  --card:#ffffff;
+  --text:#263433;
+  --muted:#74817f;
+  --line:#dfe8e7;
+
+  --green:#009B91;
+  --red:#ef5350;
+  --yellow:#F5AA41;
+}
+
+*{box-sizing:border-box}
+
+html{background:var(--bg)}
+
+body{
+  margin:0;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 43% 4%,rgba(0,155,145,.07),transparent 24%),
+    linear-gradient(180deg,#f8fbfb 0%,#f2f6f5 100%);
+  font-family:"Segoe UI",Inter,Arial,sans-serif;
+}
+
+button,select{font:inherit}
+
+.app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:224px minmax(0,1fr);
+}
+
+.sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:hidden;
+  color:#fff;
+  background:
+    radial-gradient(circle at 15% 3%,rgba(80,235,225,.16),transparent 19%),
+    linear-gradient(180deg,var(--primary-dark) 0%,#006e67 47%,var(--primary) 100%);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.07);
+}
+
+.side-brand{
+  min-height:108px;
+  display:flex;
+  align-items:center;
+  padding:23px 22px 20px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+
+.brand-copy{min-width:0}
+
+.brand-copy strong{
+  display:block;
+  font-size:18px;
+  line-height:1.15;
+  letter-spacing:-.4px;
+  font-weight:800;
+  color:#fff;
+}
+
+.brand-copy small{
+  display:block;
+  margin-top:7px;
+  font-size:10px;
+  color:rgba(255,255,255,.72);
+}
+
+.side-nav{margin-top:9px}
+
+.nav-item{
+  height:54px;
+  padding:0 23px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size:13px;
+  color:rgba(255,255,255,.88);
+  border-left:5px solid transparent;
+}
+
+.nav-item.active{
+  border-left-color:var(--secondary);
+  background:linear-gradient(90deg,rgba(245,170,65,.24),rgba(255,255,255,.08));
+  font-weight:700;
+}
+
+.nav-icon{
+  width:22px;
+  display:inline-grid;
+  place-items:center;
+}
+
+.nav-icon svg{
+  width:20px;
+  height:20px;
+  stroke:currentColor;
+  stroke-width:2.2;
+  fill:none;
+}
+
+.side-message{
+  position:absolute;
+  left:24px;
+  right:24px;
+  bottom:24px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.35);
+  color:rgba(255,255,255,.68);
+  font-size:12px;
+  line-height:1.5;
+}
+
+
+.export-wrap{
+  position:relative;
+}
+.export-button{
+  height:34px;
+  text-decoration:none;
+  padding:0 13px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #c8ddda;
+  border-radius:8px;
+  background:#fff;
+  color:#005852;
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 2px 7px rgba(0,88,82,.05);
+}
+.export-button:hover{
+  border-color:#009B91;
+  background:#f2fbfa;
+}
+.export-button svg{
+  width:16px;
+  height:16px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+}
+.export-status{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:200;
+  display:none;
+  padding:10px 14px;
+  border-radius:9px;
+  background:#005852;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
+}
+.export-status.show{display:block}
+
+@media print{
+  .sidebar,.topbar,.export-wrap,.detail-link{display:none!important}
+  .app{display:block!important}
+  .content{width:100%!important}
+  .main{padding:0!important}
+  .view-section{display:none!important}
+  .view-section.active{display:block!important}
+  body{background:#fff!important}
+  .card{box-shadow:none!important}
+}
+
+.content{min-width:0}
+
+.topbar{
+  height:48px;
+  padding:0 28px;
+  border-bottom:1px solid #dce7e5;
+  background:rgba(255,255,255,.72);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.welcome{
+  font-size:11px;
+  color:#6d7c79;
+}
+
+.top-right{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.bell{
+  position:relative;
+  color:var(--primary-dark);
+  display:grid;
+  place-items:center;
+}
+
+.bell svg{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+}
+
+.bell-dot{
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--secondary);
+  top:-1px;
+  right:-2px;
+  border:1px solid #fff;
+}
+
+.user-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-left:14px;
+  border-left:1px solid #e1e7e6;
+}
+
+.avatar{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:var(--primary-dark);
+  font-weight:800;
+  font-size:11px;
+}
+
+.user-copy strong{
+  display:block;
+  font-size:10px;
+  color:#193b38;
+}
+
+.user-copy small{
+  display:block;
+  font-size:8px;
+  margin-top:1px;
+  color:#75837f;
+}
+
+.main{padding:24px 28px 30px}
+
+.page-head{
+  display:grid;
+  grid-template-columns:minmax(320px,1fr) minmax(410px,620px);
+  align-items:end;
+  gap:34px;
+  margin-bottom:19px;
+}
+
+.page-title h1{
+  margin:0;
+  font-size:28px;
+  letter-spacing:-.7px;
+  color:#173c39;
+}
+
+.page-title p{
+  margin:6px 0 0;
+  font-size:12px;
+  color:#74849a;
+}
+
+.filters{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:17px;
+}
+
+.filter label{
+  display:block;
+  margin:0 0 5px 2px;
+  font-size:9px;
+  font-weight:800;
+  color:#24423f;
+}
+
+.filter select{
+  width:100%;
+  height:39px;
+  padding:0 13px;
+  border-radius:6px;
+  border:1px solid #cbdedb;
+  background:#fff;
+  color:#203d3a;
+  font-size:12px;
+  outline:none;
+}
+
+.filter select:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(0,155,145,.10);
+}
+
+.card{
+  background:rgba(255,255,255,.97);
+  border:1px solid #e0e9e7;
+  border-radius:12px;
+  box-shadow:0 8px 28px rgba(37,88,82,.055);
+}
+
+.manager-card{padding:13px 13px 11px}
+
+.manager-head{
+  display:grid;
+  grid-template-columns:minmax(270px,1fr) minmax(420px,610px);
+  gap:18px;
+  align-items:center;
+  padding:1px 7px 13px;
+}
+
+.manager-title h2{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.4px;
+  color:#173c39;
+}
+
+.manager-title p{
+  margin:5px 0 0;
+  font-size:11px;
+  color:#76869a;
+}
+
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.kpi-card{
+  min-height:91px;
+  border:1px solid #dce8e6;
+  border-radius:8px;
+  padding:12px 15px;
+  display:grid;
+  grid-template-columns:43px 1fr;
+  align-items:center;
+  background:linear-gradient(180deg,#fff,#fbfefe);
+}
+
+.kpi-icon{
+  color:var(--primary);
+  display:grid;
+  place-items:center;
+}
+
+.kpi-icon svg{
+  width:29px;
+  height:29px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.9;
+}
+
+.kpi-copy small{
+  display:block;
+  font-size:9px;
+  font-weight:700;
+  color:#314f4b;
+}
+
+.kpi-value{
+  display:block;
+  margin-top:1px;
+  font-size:23px;
+  line-height:1;
+  font-weight:900;
+  color:#143d39;
+}
+
+.kpi-sub{
+  margin-top:6px;
+  font-size:9px;
+  color:#637a76;
+}
+
+
+.table-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
+.table-card-actions{display:flex;align-items:center;gap:10px}
+ .table-total-score{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 12px;
+  border:1px solid #83cfc8;
+  border-radius:10px;
+  background:linear-gradient(135deg,#e5f7f4,#ffffff);
+  box-shadow:0 4px 12px rgba(0,88,82,.09);
+  font-size:10px;font-weight:900;color:#31524e;
+  text-transform:uppercase;letter-spacing:.35px
+}
+.table-total-score::before{content:"★";font-size:14px;color:#F5AA41}
+.table-total-score strong{
+  display:inline-grid;place-items:center;
+  min-width:48px;height:30px;padding:0 10px;
+  border-radius:8px;background:#005852;color:#fff;
+  font-size:18px;line-height:1;font-weight:900;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)
+}
+.toggle-calc{border:1px solid #b9d9d5;background:#fff;color:#006b63;border-radius:7px;padding:6px 10px;font-size:9px;font-weight:800;cursor:pointer}
+.calc-col{display:none}
+.show-calc .calc-col{display:table-cell}
+
+.table-wrap{
+  overflow-x:auto;
+  border:1px solid #dce7e5;
+  border-radius:7px;
+}
+
+table{
+  width:100%;
+  min-width:1120px;
+  border-collapse:collapse;
+}
+
+thead th{
+  height:39px;
+  padding:0 10px;
+  background:linear-gradient(180deg,var(--primary),#008d84);
+  border-right:1px solid rgba(255,255,255,.17);
+  border-bottom:1px solid var(--primary-dark);
+  color:#fff;
+  font-size:9px;
+  font-weight:800;
+  text-transform:uppercase;
+  text-align:center;
+  white-space:nowrap;
+}
+
+thead th:first-child,
+thead th:nth-child(2){
+  text-align:left;
+}
+
+thead th:last-child{border-right:0}
+
+tbody td{
+  height:38px;
+  padding:0 10px;
+  border-right:1px solid #e1e8e7;
+  border-bottom:1px solid #e1e8e7;
+  font-size:10px;
+  text-align:center;
+  color:#314541;
+  white-space:nowrap;
+}
+
+tbody td:last-child{border-right:0}
+tbody tr:last-child td{border-bottom:0}
+
+tbody td:first-child,
+tbody td:nth-child(2){
+  text-align:left;
+}
+
+.block-label{
+  font-weight:900;
+  color:#fff;
+  font-size:9px;
+  background:linear-gradient(180deg,var(--primary),#008d84)!important;
+  text-align:left!important;
+  vertical-align:middle!important;
+}
+
+.indicator-name{color:#354b47;font-weight:800}
+
+.planned-cell{
+  background:#f1f3f3;
+  color:#4d5b58;
+  font-weight:700;
+  text-align:center!important;
+}
+
+.point-cell,
+.weight-cell,
+.score-cell{
+  font-weight:800;
+  background:#e5f5f3;
+  color:#00675f;
+}
+
+.total-row td{
+  background:#edf4f3;
+  font-weight:800;
+  color:#213b38;
+}
+
+.total-row td.total-score{
+  background:#ccebe7;
+  font-size:14px;
+  color:#005852;
+}
+
+.performance{
+  display:inline-grid;
+  width:26px;
+  height:24px;
+  place-items:center;
+}
+
+.performance svg{
+  width:17px;
+  height:17px;
+  stroke:currentColor;
+  stroke-width:2.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+
+.performance.up{color:var(--primary)}
+.performance.down{color:#ef5350}
+
+.performance.equal{
+  color:var(--gray);
+  font-size:18px;
+  font-weight:900;
+}
+
+.eff{
+  display:inline-grid;
+  width:22px;
+  height:22px;
+  place-items:center;
+  border-radius:50%;
+  font-size:14px;
+  font-weight:900;
+  color:white;
+}
+
+.eff.ok{background:var(--primary)}
+.eff.warn{background:var(--secondary)}
+.eff.bad{background:#ef5350}
+
+.advance-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:52px;
+  height:23px;
+  padding:0 8px;
+  border-radius:13px;
+  font-size:9px;
+  font-weight:900;
+}
+
+.advance-ok{
+  background:#d9f2ef;
+  color:#00675f;
+  border:1px solid #81cfc7;
+}
+
+.advance-bad{
+  background:#fde7e7;
+  color:#c83535;
+  border:1px solid #f3aaaa;
+}
+
+.irl{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:66px;
+  height:23px;
+  padding:0 8px;
+  border-radius:13px;
+  font-size:8px;
+  font-weight:900;
+  border:1px solid transparent;
+}
+
+.irl-seguro{
+  background:#dff5ef;
+  color:#007b72;
+  border-color:#a4dcd6;
+}
+
+.irl-aceitavel{
+  background:#e7f7f5;
+  color:#278d85;
+  border-color:#b9e3df;
+}
+
+.irl-toleravel{
+  background:#fff1dc;
+  color:#a5690b;
+  border-color:#f3cf95;
+}
+
+.irl-critico,
+.irl-zero{
+  background:#fde6e6;
+  color:#c83f3a;
+  border-color:#f3aaaa;
+}
+
+.coord-section{
+  margin-top:17px;
+  padding:15px 15px 14px;
+}
+
+.coord-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 3px 12px;
+}
+
+.coord-head h2{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.4px;
+  color:#173c39;
+}
+
+.coord-head p{
+  margin:4px 0 0;
+  font-size:11px;
+  color:#77879a;
+}
+
+.detail-link{
+  border:0;
+  padding:4px 0;
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:10px;
+  font-weight:700;
+}
+
+.coord-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:13px;
+}
+
+.coord-card{
+  min-height:143px;
+  padding:14px 15px 12px;
+  border-radius:8px;
+  border:1px solid #dce7e5;
+  background:linear-gradient(180deg,#fff 0%,#fbfefd 100%);
+}
+
+.coord-card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.coord-name{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:10px;
+  font-weight:800;
+  color:#203f3b;
+}
+
+.coord-name svg{
+  width:20px;
+  height:20px;
+  flex:0 0 auto;
+  color:var(--primary);
+  stroke:currentColor;
+  stroke-width:2;
+  fill:none;
+}
+
+.chevron{
+  font-size:21px;
+  color:var(--primary-dark);
+  line-height:1;
+}
+
+.coord-main{
+  margin-top:17px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:11px;
+  align-items:end;
+}
+
+.coord-score{
+  font-size:24px;
+  font-weight:900;
+  color:#143d39;
+}
+
+.spark{
+  height:36px;
+  width:100%;
+}
+
+.spark svg{
+  width:100%;
+  height:100%;
+}
+
+.spark path.line{
+  fill:none;
+  stroke:var(--primary);
+  stroke-width:2;
+}
+
+.coord-foot{
+  margin-top:9px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.coord-foot small{
+  font-size:9px;
+  color:#7d8999;
+}
+
+.pill{
+  padding:5px 10px;
+  border-radius:14px;
+  background:#dff5ef;
+  color:#007b72;
+  font-size:8px;
+  font-weight:800;
+}
+
+.details{
+  display:none;
+  margin-top:16px;
+}
+
+.details.open{display:block}
+
+.detail-panel{
+  margin-top:12px;
+  padding:13px;
+}
+
+.detail-panel h3{
+  margin:0 0 10px;
+  font-size:14px;
+  color:#153b37;
+}
+
+
+.view-section{display:none}
+.view-section.active{display:block}
+
+.ranking-section{
+  margin-bottom:17px;
+  padding:15px;
+}
+
+.ranking-section h2,
+.chart-section h2{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.4px;
+  color:#173c39;
+}
+
+.section-subtitle{
+  margin:4px 0 12px;
+  font-size:11px;
+  color:#77879a;
+}
+
+.ranking-main{
+  overflow:auto;
+  border:1px solid #dce7e5;
+  border-radius:8px;
+}
+
+.ranking-main table{
+  min-width:800px;
+}
+
+.ranking-main thead th{
+  background:linear-gradient(180deg,var(--primary),#008d84);
+}
+
+.ranking-main tbody td{
+  height:36px;
+}
+
+.ranking-main tbody tr{
+  transition:background .18s ease, box-shadow .18s ease;
+}
+
+.ranking-main tbody tr.rank-1 td{
+  background:#FFF4D6;
+}
+
+.ranking-main tbody tr.rank-2 td{
+  background:#F0F2F3;
+}
+
+.ranking-main tbody tr.rank-3 td{
+  background:#F7E1CF;
+}
+
+.ranking-main tbody tr:not(.rank-1):not(.rank-2):not(.rank-3) td,
+.mini-ranking tbody tr:not(.rank-1):not(.rank-2):not(.rank-3) td{
+  background:#fff;
+}
+
+.ranking-main tr.selected-region td,
+.mini-ranking tr.selected-region td{
+  color:#123f3b;
+  font-weight:900;
+}
+
+.ranking-main tr.selected-region:not(.rank-1):not(.rank-2):not(.rank-3) td,
+.mini-ranking tr.selected-region:not(.rank-1):not(.rank-2):not(.rank-3) td{
+  background:#e7fbf9!important;
+}
+
+.ranking-main tr.selected-region{
+  box-shadow:inset 3px 0 0 var(--primary), inset -3px 0 0 var(--primary);
+}
+
+.mini-ranking tr.selected-region{
+  box-shadow:inset 3px 0 0 var(--primary);
+}
+
+.rank-pos{
+  font-weight:900;
+  color:var(--primary-dark);
+  width:84px;
+}
+
+.rank-score{
+  font-weight:900;
+  color:#173c39;
+  font-size:12px;
+}
+
+.mini-rankings{
+  margin-top:13px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(190px,1fr));
+  gap:12px;
+  align-items:start;
+}
+
+.mini-ranking{
+  overflow:hidden;
+  border:1px solid #dce7e5;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 5px 18px rgba(0,88,82,.05);
+}
+
+.mini-ranking h3{
+  margin:0;
+  padding:11px 12px;
+  background:#fff;
+  color:#17433f;
+  font-size:11px;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border-bottom:1px solid #e7efee;
+}
+
+.coord-rank-icon{
+  width:30px;
+  height:30px;
+  border-radius:8px;
+  display:inline-grid;
+  place-items:center;
+  color:#fff;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  flex:0 0 auto;
+}
+
+.coord-rank-icon svg{
+  width:17px;
+  height:17px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+}
+
+.coord-rank-copy strong{
+  display:block;
+  font-size:10px;
+}
+
+.coord-rank-copy small{
+  display:block;
+  margin-top:2px;
+  font-size:7.5px;
+  font-weight:500;
+  color:#83908e;
+}
+
+.mini-ranking table{
+  min-width:0;
+  width:100%;
+}
+
+.mini-ranking thead{
+  display:none;
+}
+
+.mini-ranking tbody td{
+  height:34px;
+  padding:0 8px;
+  font-size:9px;
+}
+
+.mini-ranking tbody tr:not(:last-child) td{
+  border-bottom:1px solid #edf2f1;
+}
+
+.rank-display{
+  min-width:34px;
+}
+
+.nav-item{cursor:pointer}
+.nav-item:hover{background:rgba(255,255,255,.07)}
+
+.chart-section{
+  padding:16px;
+}
+
+.chart-toolbar{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(220px,320px));
+  gap:12px;
+  margin:14px 0;
+}
+
+.chart-box{
+  border:1px solid #dce7e5;
+  border-radius:10px;
+  background:#fff;
+  padding:10px 12px 8px;
+  overflow:hidden;
+}
+
+.chart-title{
+  margin:0 0 3px;
+  font-size:14px;
+  color:#173c39;
+}
+
+.chart-note{
+  margin:0 0 10px;
+  font-size:10px;
+  color:#788783;
+}
+
+.chart-svg{
+  width:100%;
+  height:310px;
+  display:block;
+}
+
+.evolution-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+
+.evolution-controls{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(220px,320px));
+  gap:12px;
+  margin:14px 0;
+}
+
+.empty-state{
+  padding:34px 18px;
+  text-align:center;
+  color:#7a8885;
+  font-size:12px;
+}
+
+.chart-legend{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  margin:2px 0 8px;
+  font-size:10px;
+  color:#53635f;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.legend-swatch{
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  display:inline-block;
+}
+
+.legend-prev{background:var(--gray-light)}
+.legend-current{background:var(--primary)}
+
+
+.comparison-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:14px;
+}
+
+.comparison-card{min-width:0}
+
+.sector-section{
+  margin-bottom:16px;
+}
+
+.sector-subsection{
+  margin-top:18px;
+  padding-top:6px;
+}
+
+.sector-title{
+  margin:0 0 8px;
+  color:#173c39;
+  font-size:17px;
+}
+
+.evolution-filter-grid{
+  display:grid;
+  grid-template-columns:minmax(230px,1.35fr) minmax(150px,.75fr) minmax(150px,.75fr);
+  gap:14px;
+  align-items:end;
+}
+
+.evolution-filter-grid select[multiple]{
+  min-height:118px;
+  padding:8px 10px;
+}
+
+.filter-hint{
+  display:block;
+  margin-top:4px;
+  color:#7b8986;
+  font-size:9px;
+}
+
+
+/* PÓDIO E TOOLTIPS */
+.rank-display{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-weight:900;white-space:nowrap}
+.rank-icon{width:32px;height:32px;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 2px rgba(0,0,0,.13))}
+.rank-icon.gold{color:#D99A00}.rank-icon.silver{color:#9CA4AA}.rank-icon.bronze{color:#B96832}
+.rank-number{
+  display:inline-grid;
+  place-items:center;
+  min-width:28px;
+  height:28px;
+  padding:0 7px;
+  border-radius:999px;
+  background:#e8eeee;
+  color:#52605e;
+  font-weight:900;
+  font-size:10px;
+}
+.rank-cell{white-space:nowrap;text-align:center!important}
+.chart-mark{cursor:pointer;transition:opacity .15s ease,filter .15s ease}
+.chart-mark:hover{opacity:.82;filter:brightness(.97)}
+.chart-tooltip{
+  position:fixed;z-index:9999;pointer-events:none;display:none;
+  min-width:150px;max-width:260px;padding:9px 11px;border-radius:8px;
+  background:#263433;color:#fff;font-size:11px;line-height:1.35;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);white-space:pre-line
+}
+
+
+/* Página Tabelas: sem notas, sem Pontos/Peso/Score e com limites claros por região */
+.tables-no-score .table-total-score,
+.tables-no-score .calc-col{
+  display:none!important;
+}
+
+.region-boundary{
+  margin:18px 0 10px;
+  padding:11px 14px;
+  border-radius:8px;
+  font-weight:900;
+  letter-spacing:.35px;
+  font-size:11px;
+  text-transform:uppercase;
+}
+
+.region-boundary.start{
+  color:#fff;
+  background:linear-gradient(90deg,#005852,#009B91);
+  border-left:6px solid #F5AA41;
+}
+
+.region-boundary.end{
+  color:#435653;
+  background:#eef3f2;
+  border:1px solid #d9e4e2;
+  border-left:6px solid #7F7F7F;
+  margin-bottom:28px;
+}
+
+.region-table-title{
+  margin:10px 0 6px;
+  padding:8px 11px;
+  border-radius:8px 8px 0 0;
+  background:#f3f8f7;
+  border:1px solid #dce7e5;
+  border-bottom:0;
+  color:#173c39;
+  font-size:12px;
+  font-weight:900;
+}
+
+.all-tables-card{
+  padding:14px;
+  margin-bottom:14px;
+  position:relative;
+}
+
+.all-tables-card .region-table-title{
+  padding-right:150px;
+  min-height:32px;
+  display:flex;
+  align-items:center;
+}
+
+.all-tables-card .data-table-block > .table-card-head{
+  position:absolute;
+  top:21px;
+  right:24px;
+  margin:0;
+  z-index:3;
+  pointer-events:none;
+}
+
+.all-tables-card .data-table-block > .table-card-head .table-total-score{
+  display:none!important;
+}
+
+.all-tables-card .data-table-block > .table-card-head .table-card-actions{
+  pointer-events:auto;
+}
+
+.all-tables-card .toggle-actions{
+  border:1px solid #b9d9d5;
+  background:#fff;
+  color:#006b63;
+  border-radius:7px;
+  padding:6px 10px;
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+@media(max-width:1180px){
+  .coord-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mini-rankings{grid-template-columns:repeat(3,minmax(170px,1fr))}
+  .comparison-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .page-head{grid-template-columns:1fr}
+  .manager-head{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr}
+  .mini-rankings{grid-template-columns:1fr}
+  .chart-toolbar,.evolution-controls,.evolution-filter-grid{grid-template-columns:1fr}
+}
+
+
+/* ============================================================
+   JUSTIFICATIVAS SEMANAIS
+   ============================================================ */
+.just-cell{min-width:220px;text-align:center!important}
+.just-preview{margin-top:6px;color:#44524f;font-size:9px;line-height:1.35;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.just-pending,.just-ok{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 9px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.25px}
+.just-pending{background:#fde6e6;border:1px solid #efaaaa;color:#b82e2e}
+.just-ok{background:#dff5ef;border:1px solid #a4dcd6;color:#007b72}
+.just-ok.readonly-click,.just-pending.readonly-click{cursor:pointer}
+.actions-toggle-filter{min-width:130px}
+.actions-toggle-filter .toggle-actions{width:100%;min-height:32px}
+.just-actions-col{display:none;min-width:175px;text-align:center!important;white-space:nowrap}
+table.show-actions .just-actions-col{display:table-cell}
+.just-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:5px}
+.just-btn,.toggle-actions{border:1px solid #b9d9d5;background:#fff;color:#006b63;border-radius:7px;padding:5px 8px;font-size:8px;font-weight:800;cursor:pointer}
+.toggle-actions{padding:7px 11px;font-size:9px}
+.just-btn:hover,.toggle-actions:hover{border-color:#009B91;background:#f2fbfa}
+.just-btn.danger{background:#fff4f4;border-color:#efb4b4;color:#b82e2e}
+.just-na{color:#a0aaa7;font-size:9px}
+.just-modal-backdrop{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(13,30,28,.50)}
+.just-modal-backdrop.open{display:flex}
+.just-modal{width:min(760px,96vw);max-height:88vh;overflow:auto;border-radius:14px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.25);border:1px solid #dce7e5}
+.just-modal-head{position:sticky;top:0;z-index:2;padding:16px 18px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;background:#fff;border-bottom:1px solid #e4ecea}
+.just-modal-head h3{margin:0;color:#173c39;font-size:17px}
+.just-modal-head p{margin:4px 0 0;color:#71807d;font-size:10px}
+.just-close{border:0;background:#eef4f3;color:#31514d;width:31px;height:31px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:900}
+.just-modal-body{padding:16px 18px 18px}
+.just-editor textarea{width:100%;min-height:150px;resize:vertical;padding:12px;border:1px solid #cbdedb;border-radius:9px;font:inherit;font-size:12px;line-height:1.5;color:#263433;outline:none}
+.just-editor textarea:focus{border-color:#009B91;box-shadow:0 0 0 3px rgba(0,155,145,.10)}
+.just-editor-footer{margin-top:10px;display:flex;justify-content:flex-end;gap:8px}
+.just-save-status{margin-right:auto;align-self:center;font-size:9px;color:#70807c}
+.just-week-current,.just-week-history{padding:13px 14px;border-radius:10px;margin-bottom:10px}
+.just-week-current{background:#f2fbfa;border:1px solid #b7e0dc;color:#1f3431}
+.just-week-current .just-comment{font-weight:800;color:#172c29}
+.just-week-history{background:#f6f7f7;border:1px solid #e2e7e6;color:#697673}
+.just-week-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.3px}
+.just-comment{margin-top:7px;white-space:pre-wrap;font-size:12px;line-height:1.5}
+.just-meta{margin-top:8px;font-size:9px;color:#899491}
+.just-empty-history{padding:20px;text-align:center;color:#7c8986;font-size:11px}
+
+
+/* Filtro retrátil de regiões - Evolução Temporal */
+.region-dropdown{
+  position:relative;
+}
+
+.region-toggle{
+  width:100%;
+  min-height:35px;
+  padding:7px 34px 7px 10px;
+  border:1px solid #cfdcda;
+  border-radius:7px;
+  background:#fff;
+  color:#294743;
+  font-size:10px;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+  position:relative;
+}
+
+.region-toggle::after{
+  content:"⌄";
+  position:absolute;
+  right:11px;
+  top:50%;
+  transform:translateY(-54%);
+  font-size:14px;
+  color:#55706c;
+}
+
+.region-dropdown:has(.region-menu.open) .region-toggle::after{
+  content:"⌃";
+}
+
+.region-menu{
+  display:none;
+  position:absolute;
+  top:calc(100% + 5px);
+  left:0;
+  right:0;
+  z-index:40;
+  max-height:230px;
+  overflow-y:auto;
+  padding:7px;
+  border:1px solid #d4e1df;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 10px 26px rgba(0,55,50,.14);
+}
+
+.region-menu.open{
+  display:block;
+}
+
+.region-option{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 8px;
+  border-radius:6px;
+  color:#294743;
+  font-size:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.region-option:hover{
+  background:#f1f7f6;
+}
+
+.region-option input{
+  margin:0;
+  accent-color:#009B91;
+}
+
+</style>
 </head>
+
 <body>
-  <main class="shell">
-    <section class="card">
-      <div class="badge">ESTRUTURA V2</div>
-      <h1>Plataforma Operacional</h1>
-      <p>Fundação técnica para GitHub Pages + Supabase.</p>
+<div class="app">
 
-      <div class="status-grid">
-        <div class="status">
-          <span>GitHub Pages</span>
-          <strong id="githubStatus">OK</strong>
-        </div>
-        <div class="status">
-          <span>Supabase</span>
-          <strong id="supabaseStatus">Testando...</strong>
-        </div>
+<aside class="sidebar">
+  <div class="side-brand">
+    <div class="brand-copy">
+      <strong>Análise -<br>Superintendência</strong>
+      <small>Desempenho regional</small>
+    </div>
+  </div>
+
+  <nav class="side-nav">
+    <div class="nav-item active" data-view="general">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5.5 9.5V21h13V9.5"></path>
+          <path d="M9.5 21v-7h5v7"></path>
+        </svg>
+      </span>
+      Visão Geral
+    </div>
+
+    <div class="nav-item" data-view="tables">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 5h16v14H4z"></path>
+          <path d="M4 10h16"></path>
+          <path d="M9 5v14"></path>
+        </svg>
+      </span>
+      Tabelas
+    </div>
+
+    <div class="nav-item" data-view="comparison">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 20V10"></path>
+          <path d="M10 20V4"></path>
+          <path d="M16 20v-7"></path>
+          <path d="M22 20V7"></path>
+        </svg>
+      </span>
+      Comparação
+    </div>
+
+    <div class="nav-item" data-view="evolution">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 20h18"></path>
+          <path d="M4 18V5"></path>
+          <path d="m6 15 4-4 3 2 6-7"></path>
+          <path d="M16 6h3v3"></path>
+        </svg>
+      </span>
+      Evolução Temporal
+    </div>
+  </nav>
+
+  <div class="side-message">
+    Resultados hoje.<br>
+    Uma região mais forte<br>
+    amanhã.
+  </div>
+</aside>
+
+<div class="content">
+
+<header class="topbar">
+  <div class="welcome">
+    Bem-vindo(a) à plataforma de desempenho regional
+  </div>
+
+  <div class="top-right">
+    <div class="export-wrap">
+      <a id="exportButton" class="export-button" href="Analise_Superintendencia_Agosto_2026.pptx" download>
+        <svg viewBox="0 0 24 24"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg>
+        Exportar PowerPoint
+      </a>
+    </div>
+
+    <div class="bell">
+      <svg viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M10 21h4"></path>
+      </svg>
+      <span class="bell-dot"></span>
+    </div>
+
+    <div class="user-box">
+      <div class="avatar">AS</div>
+      <div class="user-copy">
+        <strong>Análise - Superintendência⌄</strong>
+        <small>Gestão Regional</small>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <section id="view-general" class="view-section active">
+    <div class="page-head">
+      <div class="page-title">
+        <h1>Visão Geral da Região</h1>
+        <p>Acompanhe os principais indicadores de desempenho da sua região.</p>
       </div>
 
-      <div class="details" id="details">
-        Carregando diagnóstico...
+      <div class="filters">
+        <div class="filter">
+          <label>Região</label>
+          <select id="regionSelect"></select>
+        </div>
+
+        <div class="filter">
+          <label>Período</label>
+          <select>
+            <option>Agosto/2026</option>
+          </select>
+        </div>
       </div>
+    </div>
+
+    <section class="card ranking-section">
+      <h2>Ranking das Regiões e Coordenações</h2>
+      <p class="section-subtitle">Posição consolidada no período, com destaque para a região selecionada.</p>
+      <div id="rankingOverview"></div>
+      <div id="miniRankings" class="mini-rankings"></div>
     </section>
-  </main>
 
-  <script src="config/supabase_config.js"></script>
-  <script src="assets/js/healthcheck.js"></script>
+    <section id="managerCard"></section>
+
+    <section class="card coord-section">
+      <div class="coord-head">
+        <div>
+          <h2>Coordenações da Região</h2>
+          <p id="coordSubtitle"></p>
+        </div>
+
+        <button id="detailToggle" class="detail-link">
+          Ver detalhes das coordenações&nbsp;&nbsp;→
+        </button>
+      </div>
+
+      <div id="coordGrid" class="coord-grid"></div>
+      <div id="detailArea" class="details"></div>
+    </section>
+  </section>
+
+
+  <section id="view-tables" class="view-section tables-no-score">
+    <div class="page-head">
+      <div class="page-title">
+        <h1>Tabelas</h1>
+      </div>
+
+      <div class="filters">
+        <div class="filter">
+          <label>Período</label>
+          <select>
+            <option>Agosto/2026</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="allRegionTables"></div>
+  </section>
+
+  <section id="view-comparison" class="view-section">
+    <div class="page-head">
+      <div class="page-title">
+        <h1>Comparação entre Regiões</h1>
+        <p>Todos os indicadores, organizados por setor, comparando o mês anterior com o período atual.</p>
+      </div>
+    </div>
+
+    <div id="comparisonSections"></div>
+  </section>
+
+  <section id="view-evolution" class="view-section">
+    <div class="page-head evolution-page-head">
+      <div class="page-title">
+        <h1>Evolução Temporal</h1>
+        <p>Evolução da pontuação da gerência, coordenações e indicadores para uma ou mais regiões.</p>
+      </div>
+
+      <div class="evolution-filter-grid">
+        <div class="filter region-dropdown">
+          <label>Regiões</label>
+          <button id="evolutionRegionToggle" class="region-toggle" type="button">Selecionar regiões</button>
+          <div id="evolutionRegionMenu" class="region-menu"></div>
+        </div>
+
+        <div class="filter">
+          <label>Mês Início</label>
+          <select id="evolutionStartMonth"></select>
+        </div>
+
+        <div class="filter">
+          <label>Mês Fim</label>
+          <select id="evolutionEndMonth"></select>
+        </div>
+      </div>
+    </div>
+
+    <section class="card chart-section">
+      <h2>Pontuação da Gerência</h2>
+      <p class="section-subtitle">Evolução das regiões selecionadas no intervalo informado.</p>
+      <div class="chart-box"><div id="managerEvolutionChart"></div></div>
+    </section>
+
+    <section class="card chart-section" style="margin-top:14px">
+      <h2>Pontuação das Coordenações</h2>
+      <p class="section-subtitle">Cada setor é apresentado separadamente para facilitar a comparação.</p>
+      <div id="coordEvolutionCharts" class="evolution-grid"></div>
+    </section>
+
+    <section class="card chart-section" style="margin-top:14px">
+      <h2>Evolução por Indicador</h2>
+      <p class="section-subtitle">Todos os indicadores, organizados por setor, para as regiões e meses selecionados.</p>
+      <div id="indicatorEvolutionSections"></div>
+    </section>
+  </section>
+
+</main>
+</div>
+</div>
+
+<script>
+const DATA = [{"Região":"Baixada","Coordenação":"Gerência","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":7.673,"Realizado":8.792,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.145836048481689,"Desempenho":"↓","Mês Anterior":1.21929227628445,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":87.1411376098007,"Realizado":88.52531601999998,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.015884327978335,"Desempenho":"↑","Mês Anterior":0.9988674044061887,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":43.29742913,"Realizado":45.80733185,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.057968862596069,"Desempenho":"↑","Mês Anterior":1.025574396711832,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.01,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.01,"Desempenho":"↑","Mês Anterior":0.97,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.00989898989899,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO TOTAL EM 12 MESES","Planejado":22.4830597837,"Realizado":23.90238863000002,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.063128811645514,"Desempenho":"↓","Mês Anterior":1.161521499448732,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Gerência","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.0973,"Realizado":0.0975,"Pontos":0.5,"Peso":0.15,"Score":0.75,"Avanço":0.9979487179487179,"Desempenho":"↑","Mês Anterior":0.9938775510204081,"Eficiência":"⚠️"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.11,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":2.102,"Realizado":2.775,"Pontos":0.996,"Peso":0.2,"Score":1.992,"Avanço":1.320171265461465,"Desempenho":"↑","Mês Anterior":1.288634996993385,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":1.0,"Eficiência":"❌"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.00989898989899,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.831,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8793650793650793,"Desempenho":"↓","Mês Anterior":0.9682539682539684,"Eficiência":"❌"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO R$ MM","Planejado":20.82865792250001,"Realizado":22.33654138000002,"Pontos":0.996,"Peso":0.15,"Score":1.494,"Avanço":1.0723946527477,"Desempenho":"↓","Mês Anterior":1.16100278551532,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":6933.0,"Realizado":8974.0,"Pontos":0.996,"Peso":0.1,"Score":0.9960000000000001,"Avanço":1.294389153324679,"Desempenho":"↑","Mês Anterior":1.166363486026129,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":73537.5795238095,"Realizado":73413.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9983059066586606,"Desempenho":"↓","Mês Anterior":1.031867180786306,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.04,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.04,"Desempenho":"↑","Mês Anterior":1.01,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":13.28720918,"Realizado":12.77760789,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9616472290684595,"Desempenho":"↓","Mês Anterior":0.9754605041251119,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Varejo","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":18.00634155,"Realizado":20.2174521,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.122796212870904,"Desempenho":"↑","Mês Anterior":1.071590549574799,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.076,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":5.571,"Realizado":6.013,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.0793394363669,"Desempenho":"↓","Mês Anterior":1.191933570581257,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":0.0,"Eficiência":"❌"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"=","Mês Anterior":1.0,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.829,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8772486772486773,"Desempenho":"↓","Mês Anterior":0.9724867724867726,"Eficiência":"❌"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":11791.0,"Realizado":12782.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.084047154609448,"Desempenho":"↓","Mês Anterior":1.094612145302845,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":56.94,"Realizado":69.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.211801896733404,"Desempenho":"↑","Mês Anterior":1.210526315789474,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.14,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.14,"Desempenho":"↑","Mês Anterior":1.05,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":48.74538965980069,"Realizado":49.57228812999999,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.0169636241698,"Desempenho":"↑","Mês Anterior":0.9761609394770745,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":8.68616245,"Realizado":9.11642608,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.049534375217678,"Desempenho":"↑","Mês Anterior":0.99498248630472,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Leitura","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.09,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Leitura","Blocos":"COBRANÇA","Indicador":"CORTE NO DISJUNTOR","Planejado":6446.042105263158,"Realizado":11266.0,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.747739126742808,"Desempenho":"↓","Mês Anterior":1.867134124415678,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Leitura","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.0973,"Realizado":0.0975,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":0.9979487179487179,"Desempenho":"↑","Mês Anterior":0.9938775510204081,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Leitura","Blocos":null,"Indicador":"ERRO DE LEITURA","Planejado":1949.05,"Realizado":1755.0,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.110569800569801,"Desempenho":"↓","Mês Anterior":1.123853211009174,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Leitura","Blocos":null,"Indicador":"ADERÊNCIA DE ENTREGA DE FATURA","Planejado":0.8475561132452264,"Realizado":0.8734,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.030492242756434,"Desempenho":"↓","Mês Anterior":1.032208224387925,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":0.955,"Realizado":1.075,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.12565445026178,"Desempenho":"↓","Mês Anterior":1.257861635220126,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":25.10853877,"Realizado":26.17542,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.042490773348974,"Desempenho":"↓","Mês Anterior":1.05721991208813,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":2.37334439,"Realizado":2.39390763,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.008664246152662,"Desempenho":"↑","Mês Anterior":1.008190342559265,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":0.76,"Pontos":0.0,"Peso":0.1,"Score":0.0,"Avanço":0.76,"Desempenho":"=","Mês Anterior":0.76,"Eficiência":"❌"},{"Região":"Baixada","Coordenação":"Construção","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL (SLA)","Planejado":0.945,"Realizado":0.976,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.032804232804233,"Desempenho":"=","Mês Anterior":1.032804232804233,"Eficiência":"✅"},{"Região":"Baixada","Coordenação":"Construção","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":4299.0,"Realizado":4835.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.12468015817632,"Desempenho":"↓","Mês Anterior":1.202492211838006,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":6.927,"Realizado":11.36,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.639959578461094,"Desempenho":"↓","Mês Anterior":1.646556423768853,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":61.87176086885233,"Realizado":61.26255652000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9901537577030719,"Desempenho":"↓","Mês Anterior":1.026160849710069,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":26.43898492,"Realizado":27.5909095,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.043569168161544,"Desempenho":"↑","Mês Anterior":1.038078960079754,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.01,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.01,"Desempenho":"↑","Mês Anterior":0.95,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.00979797979798,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO TOTAL EM 12 MESES","Planejado":35.2958883448,"Realizado":42.99937718999993,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.218254567499357,"Desempenho":"↓","Mês Anterior":1.291029900332226,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Gerência","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.0389,"Realizado":0.0366,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.062841530054645,"Desempenho":"↑","Mês Anterior":1.059782608695652,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.51,"Pontos":0.8,"Peso":0.1,"Score":0.8000000000000002,"Avanço":"TOLERÁVEL","Desempenho":null,"Mês Anterior":"TOLERÁVEL","Eficiência":"⚠️"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":5.559,"Realizado":9.263,"Pontos":0.996,"Peso":0.2,"Score":1.992,"Avanço":1.666306889728368,"Desempenho":"↑","Mês Anterior":1.666141022752872,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":0.0,"Eficiência":"❌"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.01,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.861,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.9111111111111111,"Desempenho":"↓","Mês Anterior":1.004232804232804,"Eficiência":"❌"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO R$ MM","Planejado":34.332549615,"Realizado":41.34510059999992,"Pontos":0.996,"Peso":0.15,"Score":1.494,"Avanço":1.204253720263645,"Desempenho":"↓","Mês Anterior":1.297196892941574,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":49936.0,"Realizado":68908.0,"Pontos":0.996,"Peso":0.1,"Score":0.9960000000000001,"Avanço":1.379926305671259,"Desempenho":"↑","Mês Anterior":1.314659135688953,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":81869.09285714284,"Realizado":81712.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9980811701747208,"Desempenho":"↓","Mês Anterior":1.011739713743197,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.08,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.08,"Desempenho":"↑","Mês Anterior":0.95,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":38.48520819,"Realizado":39.63261863,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.029814323319632,"Desempenho":"↓","Mês Anterior":1.039448604472812,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Varejo","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":15.552115,"Realizado":17.03973369,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.095653786639309,"Desempenho":"↓","Mês Anterior":1.101978490272554,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":1.368,"Realizado":2.097,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.532894736842105,"Desempenho":"↓","Mês Anterior":1.56484962406015,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":0.0,"Eficiência":"❌"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.005858585858586,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.848,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8973544973544973,"Desempenho":"↓","Mês Anterior":0.9693121693121693,"Eficiência":"❌"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":459.0,"Realizado":504.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.098039215686275,"Desempenho":"↑","Mês Anterior":1.072176684881603,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":68.08,"Realizado":88.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.292596944770858,"Desempenho":"↑","Mês Anterior":1.264705882352941,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":0.97,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.97,"Desempenho":"↑","Mês Anterior":0.96,"Eficiência":"❌"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":23.38655267885232,"Realizado":21.62993789,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":0.9248878270784748,"Desempenho":"↓","Mês Anterior":1.003794845713434,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":2.47807781,"Realizado":2.544589770000001,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.026840141875933,"Desempenho":"↑","Mês Anterior":0.9377046999019644,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Leitura","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.023,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Leitura","Blocos":"COBRANÇA","Indicador":"CORTE NO DISJUNTOR","Planejado":8297.557894736841,"Realizado":12480.0,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.504056995844053,"Desempenho":"↓","Mês Anterior":1.654189944134078,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Leitura","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.0389,"Realizado":0.0366,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.062841530054645,"Desempenho":"↑","Mês Anterior":1.059782608695652,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Leitura","Blocos":null,"Indicador":"ERRO DE LEITURA","Planejado":1475.6,"Realizado":1430.0,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.031888111888112,"Desempenho":"↓","Mês Anterior":1.036163522012579,"Eficiência":"✅"},{"Região":"Centro Sul","Coordenação":"Leitura","Blocos":null,"Indicador":"ADERÊNCIA DE ENTREGA DE FATURA","Planejado":0.9247371419449116,"Realizado":0.9586,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.036618901219722,"Desempenho":"↓","Mês Anterior":1.036808487604201,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":6.264,"Realizado":7.685,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.226851851851852,"Desempenho":"↑","Mês Anterior":1.209335800945918,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":42.17634903064397,"Realizado":37.79826832999999,"Pontos":0.0,"Peso":0.1,"Score":0.0,"Avanço":0.8961958348394973,"Desempenho":"↓","Mês Anterior":0.9332948551833936,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Gerência","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":33.55421163000001,"Realizado":35.95156248000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.071447092139592,"Desempenho":"↑","Mês Anterior":1.046635800376746,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.06,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.06,"Desempenho":"↑","Mês Anterior":1.03,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.007373737373737,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO TOTAL EM 12 MESES","Planejado":29.69100013310001,"Realizado":34.37097739999998,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.157622755916621,"Desempenho":"↓","Mês Anterior":1.243352135374698,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Gerência","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.07745333741749204,"Realizado":0.0772,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.003281572765441,"Desempenho":"↓","Mês Anterior":1.003875968992248,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.1,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":5.15,"Realizado":6.172,"Pontos":0.996,"Peso":0.2,"Score":1.992,"Avanço":1.198446601941747,"Desempenho":"↓","Mês Anterior":1.19990091652217,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":1.0,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Varejo","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.00989898989899,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.82,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8677248677248677,"Desempenho":"↓","Mês Anterior":0.9841269841269842,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO R$ MM","Planejado":28.70217885750001,"Realizado":32.90083578999997,"Pontos":0.996,"Peso":0.15,"Score":1.494,"Avanço":1.146283561026686,"Desempenho":"↓","Mês Anterior":1.243122977346278,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":26.127,"Realizado":30.472,"Pontos":0.996,"Peso":0.1,"Score":0.9960000000000001,"Avanço":1.16630305813909,"Desempenho":"↑","Mês Anterior":1.133731024351155,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":96279.96142857139,"Realizado":92917.0,"Pontos":0.0,"Peso":0.1,"Score":0.0,"Avanço":0.9650710139610273,"Desempenho":"↓","Mês Anterior":0.9867528062183856,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Varejo","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.0,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.0,"Desempenho":"↑","Mês Anterior":0.88,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Varejo","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":29.97058684000001,"Realizado":26.20038878999999,"Pontos":0.0,"Peso":0.1,"Score":0.0,"Avanço":0.8742033958117847,"Desempenho":"↑","Mês Anterior":0.82983232380027,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Varejo","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":19.94001819,"Realizado":21.56331046000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.081408765755996,"Desempenho":"↑","Mês Anterior":1.071590549574799,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.31,"Pontos":0.9,"Peso":0.1,"Score":0.9000000000000001,"Avanço":"ACEITÁVEL","Desempenho":null,"Mês Anterior":"ACEITÁVEL","Eficiência":"⚠️"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":1.114,"Realizado":1.396,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.253141831238779,"Desempenho":"↓","Mês Anterior":1.25544794188862,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":1.0,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↑","Mês Anterior":0.9670707070707071,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.869,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.9195767195767196,"Desempenho":"↓","Mês Anterior":0.9693121693121693,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":773.0,"Realizado":973.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.258732212160414,"Desempenho":"↑","Mês Anterior":1.014654002713704,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":77.77,"Realizado":98.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.26012601260126,"Desempenho":"↑","Mês Anterior":1.227848101265823,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.38,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.38,"Desempenho":"↑","Mês Anterior":1.32,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":12.20576219064396,"Realizado":11.59787954,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":0.9501970756803766,"Desempenho":"↓","Mês Anterior":1.025478187675748,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":0.7066086899999999,"Realizado":0.7981437399999999,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.129541359022913,"Desempenho":"↑","Mês Anterior":1.017246132228677,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Leitura","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Leste","Coordenação":"Leitura","Blocos":"COBRANÇA","Indicador":"CORTE NO DISJUNTOR","Planejado":9130.968421052632,"Realizado":9948.0,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.089479181317022,"Desempenho":"↓","Mês Anterior":1.193044802639929,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Leitura","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.07745333741749204,"Realizado":0.0772,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.003281572765441,"Desempenho":"↓","Mês Anterior":1.003875968992248,"Eficiência":"✅"},{"Região":"Leste","Coordenação":"Leitura","Blocos":null,"Indicador":"ERRO DE LEITURA","Planejado":1694.05,"Realizado":1862.0,"Pontos":0.0,"Peso":0.25,"Score":0.0,"Avanço":0.9098012889366272,"Desempenho":"↑","Mês Anterior":0.891459074733096,"Eficiência":"❌"},{"Região":"Leste","Coordenação":"Leitura","Blocos":null,"Indicador":"ADERÊNCIA DE ENTREGA DE FATURA","Planejado":0.966305287043931,"Realizado":0.9543,"Pontos":0.5,"Peso":0.2,"Score":1.0,"Avanço":0.9875760929750711,"Desempenho":"↑","Mês Anterior":0.9846838455966056,"Eficiência":"⚠️"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":5.034,"Realizado":6.243,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.240166865315852,"Desempenho":"↓","Mês Anterior":1.316751815004033,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":40.44315118879463,"Realizado":38.07854169,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9415325109619604,"Desempenho":"↓","Mês Anterior":0.9695732127970179,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":39.17636415,"Realizado":39.99754759000002,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.020961195808162,"Desempenho":"↓","Mês Anterior":1.030242813079116,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.06,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.06,"Desempenho":"↓","Mês Anterior":1.18,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.008484848484849,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO TOTAL EM 12 MESES","Planejado":40.1615099106,"Realizado":42.69949763999999,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.063194529664089,"Desempenho":"↓","Mês Anterior":1.151860744297719,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Gerência","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.08420022441311731,"Realizado":0.0824,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.021847383654336,"Desempenho":"↑","Mês Anterior":1.008373205741627,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.118,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":2.337,"Realizado":2.761,"Pontos":0.996,"Peso":0.2,"Score":1.992,"Avanço":1.18142918271288,"Desempenho":"↓","Mês Anterior":1.252805670407561,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":1.0,"Eficiência":"❌"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.009494949494949,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.795,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8412698412698414,"Desempenho":"↓","Mês Anterior":0.980952380952381,"Eficiência":"❌"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO R$ MM","Planejado":38.5809323666,"Realizado":41.11561766,"Pontos":0.996,"Peso":0.15,"Score":1.494,"Avanço":1.065697875554565,"Desempenho":"↓","Mês Anterior":1.149006622516556,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":11057.0,"Realizado":14807.0,"Pontos":0.996,"Peso":0.1,"Score":0.9960000000000001,"Avanço":1.33915166862621,"Desempenho":"↑","Mês Anterior":1.253388554216867,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":120592.3857142857,"Realizado":120878.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.002368427193994,"Desempenho":"↓","Mês Anterior":1.023890558035316,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.3,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.3,"Desempenho":"↑","Mês Anterior":1.23,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":21.52009553,"Realizado":19.07831196,"Pontos":0.0,"Peso":0.1,"Score":0.0,"Avanço":0.886534724411607,"Desempenho":"↓","Mês Anterior":0.941489638926297,"Eficiência":"❌"},{"Região":"Oeste","Coordenação":"Varejo","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":24.4026287,"Realizado":24.87373095000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.019305389423067,"Desempenho":"↓","Mês Anterior":1.039846257752098,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.175,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":2.696,"Realizado":3.482,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.291543026706232,"Desempenho":"↓","Mês Anterior":1.37037037037037,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"CLIENTE","Indicador":"% RECLAMAÇÃO PROCEDENTE","Planejado":null,"Realizado":null,"Pontos":0.0,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":1.0,"Eficiência":"❌"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↑","Mês Anterior":0.992020202020202,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.885,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.9365079365079365,"Desempenho":"↓","Mês Anterior":0.980952380952381,"Eficiência":"❌"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":4819.0,"Realizado":6508.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.35048765304005,"Desempenho":"↑","Mês Anterior":1.139008501711384,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":81.47999999999999,"Realizado":94.0,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.15365733922435,"Desempenho":"↑","Mês Anterior":1.148148148148148,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.22,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.22,"Desempenho":"↑","Mês Anterior":1.13,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":18.92305565879463,"Realizado":19.00022973,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.00407830915878,"Desempenho":"↑","Mês Anterior":1.000380348177438,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Projetos Especiais e Grandes Clientes","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":3.39136874,"Realizado":3.547896730000001,"Pontos":1.0,"Peso":0.125,"Score":1.25,"Avanço":1.046154812997421,"Desempenho":"↑","Mês Anterior":1.033003300330033,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Leitura","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.03,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Leitura","Blocos":"COBRANÇA","Indicador":"CORTE NO DISJUNTOR","Planejado":12959.95789473684,"Realizado":15246.0,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.176392710827521,"Desempenho":"↓","Mês Anterior":1.196280067960297,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Leitura","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.08420022441311731,"Realizado":0.0824,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.021847383654336,"Desempenho":"↑","Mês Anterior":1.008373205741627,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Leitura","Blocos":null,"Indicador":"ERRO DE LEITURA","Planejado":1900.6,"Realizado":1594.0,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.192346298619824,"Desempenho":"↑","Mês Anterior":1.104688503532434,"Eficiência":"✅"},{"Região":"Oeste","Coordenação":"Leitura","Blocos":null,"Indicador":"ADERÊNCIA DE ENTREGA DE FATURA","Planejado":0.9647665524392375,"Realizado":0.975,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.01060717490142,"Desempenho":"↑","Mês Anterior":1.009224709784411,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":1.012,"Realizado":1.442,"Pontos":0.9999999999999998,"Peso":0.2,"Score":2.0,"Avanço":1.424901185770751,"Desempenho":"↑","Mês Anterior":1.333333333333333,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":"ORÇAMENTO","Indicador":"CAPEX R$ MM","Planejado":19.08879349190838,"Realizado":17.44736619000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9140109456051183,"Desempenho":"↓","Mês Anterior":0.942597224716346,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":21.57834359999999,"Realizado":23.02064992,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.066840455724322,"Desempenho":"↑","Mês Anterior":1.03443865158358,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":null,"Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.1,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.1,"Desempenho":"↑","Mês Anterior":1.05,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.01010101010101,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Gerência","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO TOTAL EM 12 MESES","Planejado":24.1096619048,"Realizado":23.35258892999996,"Pontos":0.0,"Peso":0.2,"Score":0.0,"Avanço":0.968598772650175,"Desempenho":"↓","Mês Anterior":1.026502784712886,"Eficiência":"❌"},{"Região":"Vale","Coordenação":"Gerência","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.01634230235209833,"Realizado":0.016,"Pontos":1.0,"Peso":0.15,"Score":1.5,"Avanço":1.021393897006145,"Desempenho":"↑","Mês Anterior":1.0,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.145,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"PERDAS","Indicador":"IEN (GWh)","Planejado":1.012,"Realizado":1.442,"Pontos":0.996,"Peso":0.2,"Score":1.992,"Avanço":1.424901185770751,"Desempenho":"↑","Mês Anterior":1.333333333333333,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":null,"Indicador":null,"Planejado":null,"Realizado":null,"Pontos":null,"Peso":0.0,"Score":0.0,"Avanço":null,"Desempenho":null,"Mês Anterior":null,"Eficiência":null},{"Região":"Vale","Coordenação":"Varejo","Blocos":"CLIENTE","Indicador":"% ATENDIMENTO NO PRAZO DE SERVIÇOS REGULADOS","Planejado":0.99,"Realizado":0.99,"Pontos":0.9999999999999998,"Peso":0.05,"Score":0.4999999999999999,"Avanço":1.0,"Desempenho":"↓","Mês Anterior":1.01010101010101,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"QUALIDADE","Indicador":"IQG - ÍNDICE DE QUALIDADE GERAL","Planejado":0.945,"Realizado":0.829,"Pontos":0.0,"Peso":0.05,"Score":0.0,"Avanço":0.8772486772486773,"Desempenho":"↓","Mês Anterior":0.97989417989418,"Eficiência":"❌"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"COBRANÇA","Indicador":"ARRECADAÇÃO R$ MM","Planejado":24.1096619048,"Realizado":23.35258892999996,"Pontos":0.0,"Peso":0.15,"Score":0.0,"Avanço":0.968598772650175,"Desempenho":"↓","Mês Anterior":1.020478487742444,"Eficiência":"❌"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"PRODUT.","Indicador":"% CUMPRIMENTO DO PLANO FÍSICO PERDAS","Planejado":3756.0,"Realizado":4536.0,"Pontos":0.996,"Peso":0.1,"Score":0.9960000000000001,"Avanço":1.207667731629393,"Desempenho":"↑","Mês Anterior":1.096460416103756,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":null,"Indicador":"% CUMPRIMENTO DO PLANO FÍSICO CORE","Planejado":80840.57582531241,"Realizado":86321.0,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.067792987849693,"Desempenho":"↑","Mês Anterior":1.066664634946956,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":"ORÇAMENTO","Indicador":"AIS% REALIZADO R$","Planejado":1.0,"Realizado":1.1,"Pontos":1.0,"Peso":0.05,"Score":0.5,"Avanço":1.1,"Desempenho":"↑","Mês Anterior":1.05,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":null,"Indicador":"CAPEX R$ MM","Planejado":19.08879349190838,"Realizado":17.44736619000001,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":0.9140109456051183,"Desempenho":"↓","Mês Anterior":0.9426229508196721,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Varejo","Blocos":null,"Indicador":"OPEX R$ MM","Planejado":12.4512108,"Realizado":14.05117898,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":1.128499003486472,"Desempenho":"↑","Mês Anterior":1.06784140969163,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Leitura","Blocos":"SEGURANÇA","Indicador":"IRL","Planejado":0.0,"Realizado":0.067,"Pontos":1.0,"Peso":0.1,"Score":1.0,"Avanço":"SEGURO","Desempenho":null,"Mês Anterior":"SEGURO","Eficiência":"✅"},{"Região":"Vale","Coordenação":"Leitura","Blocos":"COBRANÇA","Indicador":"CORTE NO DISJUNTOR","Planejado":11380.58947368421,"Realizado":14435.0,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":1.268387725730607,"Desempenho":"↓","Mês Anterior":1.376883910386965,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Leitura","Blocos":"LEITURA","Indicador":"CLIENTES NÃO LIDOS","Planejado":0.01634230235209833,"Realizado":0.016,"Pontos":1.0,"Peso":0.25,"Score":2.5,"Avanço":1.021393897006145,"Desempenho":"↑","Mês Anterior":1.0,"Eficiência":"✅"},{"Região":"Vale","Coordenação":"Leitura","Blocos":null,"Indicador":"ERRO DE LEITURA","Planejado":1258.85,"Realizado":1295.0,"Pontos":0.2,"Peso":0.25,"Score":0.5,"Avanço":0.9720849420849422,"Desempenho":"↓","Mês Anterior":1.020664869721474,"Eficiência":"❌"},{"Região":"Vale","Coordenação":"Leitura","Blocos":null,"Indicador":"ADERÊNCIA DE ENTREGA DE FATURA","Planejado":0.9926116695927387,"Realizado":0.9919275498112272,"Pontos":1.0,"Peso":0.2,"Score":2.0,"Avanço":0.9993107880932004,"Desempenho":"↑","Mês Anterior":0.9939552689905299,"Eficiência":"✅"}];
+const REGION_ORDER = ["Baixada", "Centro Sul", "Leste", "Oeste", "Vale"];
+const COORD_ORDER = ["Gerência", "Varejo", "Projetos Especiais e Grandes Clientes", "Leitura", "Construção"];
+
+const regionSelect=document.getElementById("regionSelect");
+const managerCard=document.getElementById("managerCard");
+const coordGrid=document.getElementById("coordGrid");
+const coordSubtitle=document.getElementById("coordSubtitle");
+const detailArea=document.getElementById("detailArea");
+const detailToggle=document.getElementById("detailToggle");
+const rankingOverview=document.getElementById("rankingOverview");
+const miniRankings=document.getElementById("miniRankings");
+const allRegionTables=document.getElementById("allRegionTables");
+
+const comparisonSections=document.getElementById("comparisonSections");
+
+const evolutionRegionToggle=document.getElementById("evolutionRegionToggle");
+const evolutionRegionMenu=document.getElementById("evolutionRegionMenu");
+const evolutionStartMonth=document.getElementById("evolutionStartMonth");
+const evolutionEndMonth=document.getElementById("evolutionEndMonth");
+const managerEvolutionChart=document.getElementById("managerEvolutionChart");
+const coordEvolutionCharts=document.getElementById("coordEvolutionCharts");
+const indicatorEvolutionSections=document.getElementById("indicatorEvolutionSections");
+
+
+const CURRENT_PERIOD="Agosto/2026";
+const PREVIOUS_PERIOD="Julho/2026";
+const SUPABASE_URL="https://dxgaylieybxpdipvzbog.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_bE9KOTCn40C-5L_WfFIrsQ_m6LW6Mlj";
+const CURRENT_WEEK_START="2026-09-21";
+const CURRENT_WEEK_END="2026-09-27";
+const CURRENT_WEEK_LABEL="21/09 a 27/09";
+const sb=(window.supabase&&typeof window.supabase.createClient==="function")?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
+const JUSTIFICATIVAS_ATUAIS=new Map();
+
+function justKey(periodo,semanaInicio,regiao,coordenacao,indicador){return [periodo,semanaInicio,regiao,coordenacao,indicador].map(v=>String(v??"").trim()).join("¦")}
+function rowJustKey(row){return justKey(CURRENT_PERIOD,CURRENT_WEEK_START,row["Região"],row["Coordenação"],row["Indicador"])}
+function isEfficiencyBad(v){const x=String(v??"").trim().toUpperCase();return x==="❌"||x==="X"||x==="×"||x==="BAD"}
+function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function truncarComentario(v,max=120){const t=String(v??"").replace(/\s+/g," ").trim();return t.length<=max?t:t.slice(0,max-1)+"…"}
+function encodedPayload(row){return encodeURIComponent(JSON.stringify({periodo:CURRENT_PERIOD,semana_inicio:CURRENT_WEEK_START,semana_fim:CURRENT_WEEK_END,regiao:row["Região"],coordenacao:row["Coordenação"],indicador:row["Indicador"],eficiencia:String(row["Eficiência"]??"")}))}
+
+function justificativaCells(row,mode){
+  if(!isEfficiencyBad(row["Eficiência"])) return mode==="tables"?`<td class="just-cell"><span class="just-na">—</span></td><td class="just-actions-col"><span class="just-na">—</span></td>`:`<td class="just-cell"><span class="just-na">—</span></td>`;
+  const current=JUSTIFICATIVAS_ATUAIS.get(rowJustKey(row));
+  const encoded=encodedPayload(row);
+  if(current&&!current.apagado){
+    const preview=escapeHtml(truncarComentario(current.justificativa,120));
+    if(mode==="tables") return `<td class="just-cell"><span class="just-ok">✓ JUSTIFICADO</span><div class="just-preview">${preview}</div></td><td class="just-actions-col"><div class="just-actions"><button class="just-btn" type="button" onclick="abrirHistoricoJustificativa('${encoded}')">Visualizar</button><button class="just-btn" type="button" onclick="abrirEditorJustificativa('${encoded}')">Editar</button><button class="just-btn danger" type="button" onclick="apagarJustificativa('${encoded}')">Apagar</button></div></td>`;
+    return `<td class="just-cell"><span class="just-ok readonly-click" role="button" tabindex="0" title="Clique para visualizar" onclick="abrirHistoricoJustificativa('${encoded}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirHistoricoJustificativa('${encoded}')}">✓ JUSTIFICADO</span><div class="just-preview">${preview}</div></td>`;
+  }
+  if(mode==="tables") return `<td class="just-cell"><span class="just-pending">⚠ PENDENTE</span></td><td class="just-actions-col"><div class="just-actions"><button class="just-btn danger" type="button" onclick="abrirEditorJustificativa('${encoded}')">Justificar</button></div></td>`;
+  return `<td class="just-cell"><span class="just-pending readonly-click" role="button" tabindex="0" title="Clique para visualizar o histórico" onclick="abrirHistoricoJustificativa('${encoded}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirHistoricoJustificativa('${encoded}')}">⚠ PENDENTE</span></td>`;
+}
+
+function toggleActionsColumns(tableId,button){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.classList.toggle("show-actions");
+  if(button)button.textContent=table.classList.contains("show-actions")?"Ocultar Ações":"Mostrar Ações";
+}
+
+async function carregarJustificativasAtuais(){
+  if(!sb)return;
+  try{
+    const {data,error}=await sb.from("superintendencia_justificativas").select("*").eq("periodo",CURRENT_PERIOD).eq("semana_inicio",CURRENT_WEEK_START);
+    if(error){console.error(error);return}
+    JUSTIFICATIVAS_ATUAIS.clear();
+    (data||[]).forEach(j=>{const k=justKey(j.periodo,j.semana_inicio,j.regiao,j.coordenacao,j.indicador);if(!j.apagado)JUSTIFICATIVAS_ATUAIS.set(k,j)});
+    if(regionSelect?.value)render(regionSelect.value);
+    const tablesView=document.getElementById("view-tables");
+    if(tablesView?.classList.contains("active"))renderAllRegionTables();
+  }catch(e){console.error(e)}
+}
+
+function getJustModal(){return {backdrop:document.getElementById("justModalBackdrop"),title:document.getElementById("justModalTitle"),subtitle:document.getElementById("justModalSubtitle"),body:document.getElementById("justModalBody"),close:document.getElementById("justModalClose")}}
+function decodeJustPayload(encoded){return JSON.parse(decodeURIComponent(encoded))}
+function abrirModalBase(payload){const m=getJustModal();if(!m.backdrop)return false;m.title.textContent=payload.indicador;m.subtitle.textContent=`${payload.regiao} · ${payload.coordenacao} · ${CURRENT_PERIOD}`;m.backdrop.classList.add("open");return true}
+function fecharJustModal(){const m=getJustModal();if(!m.backdrop)return;m.backdrop.classList.remove("open");m.body.innerHTML=""}
+
+document.addEventListener("DOMContentLoaded",()=>{const m=getJustModal();m.close?.addEventListener("click",fecharJustModal);m.backdrop?.addEventListener("click",e=>{if(e.target===m.backdrop)fecharJustModal()})});
+document.addEventListener("keydown",e=>{const m=getJustModal();if(e.key==="Escape"&&m.backdrop?.classList.contains("open"))fecharJustModal()});
+
+async function abrirEditorJustificativa(encoded){
+  const payload=decodeJustPayload(encoded);if(!abrirModalBase(payload))return;
+  const key=justKey(payload.periodo,payload.semana_inicio,payload.regiao,payload.coordenacao,payload.indicador);
+  const current=JUSTIFICATIVAS_ATUAIS.get(key);
+  getJustModal().body.innerHTML=`<div class="just-editor"><div class="just-week-current"><div class="just-week-label">Semana atual · ${CURRENT_WEEK_LABEL}</div></div><textarea id="justTextarea" maxlength="5000" placeholder="Digite a justificativa...">${escapeHtml(current?.justificativa||"")}</textarea><div class="just-editor-footer"><span id="justSaveStatus" class="just-save-status"></span><button class="just-btn" type="button" onclick="fecharJustModal()">Cancelar</button><button id="justSaveButton" class="just-btn" type="button">Salvar</button></div></div>`;
+  document.getElementById("justSaveButton").onclick=()=>salvarJustificativa(payload,current);
+}
+
+async function salvarJustificativa(payload,current){
+  const textarea=document.getElementById("justTextarea"),status=document.getElementById("justSaveStatus"),btn=document.getElementById("justSaveButton");
+  const texto=String(textarea?.value||"").trim();
+  if(!texto){status.textContent="Informe uma justificativa.";return}
+  if(!sb){status.textContent="Conexão com o banco indisponível.";return}
+  btn.disabled=true;status.textContent="Salvando...";
+  try{
+    let registro=current;
+    if(!registro){const busca=await sb.from("superintendencia_justificativas").select("*").eq("periodo",payload.periodo).eq("semana_inicio",payload.semana_inicio).eq("regiao",payload.regiao).eq("coordenacao",payload.coordenacao).eq("indicador",payload.indicador).maybeSingle();if(busca.error){status.textContent="Não foi possível verificar o registro.";btn.disabled=false;return}registro=busca.data||null}
+    let result;
+    if(registro){result=await sb.from("superintendencia_justificativas").update({justificativa:texto,eficiencia_snapshot:payload.eficiencia,autor_nome:"Usuário da Plataforma",apagado:false,apagado_em:null}).eq("id",registro.id).eq("versao",registro.versao).select().maybeSingle();if(!result.error&&!result.data){status.textContent="O registro foi alterado por outro usuário. Atualizando...";btn.disabled=false;await carregarJustificativasAtuais();return}}
+    else result=await sb.from("superintendencia_justificativas").insert({periodo:payload.periodo,semana_inicio:payload.semana_inicio,semana_fim:payload.semana_fim,regiao:payload.regiao,coordenacao:payload.coordenacao,indicador:payload.indicador,justificativa:texto,eficiencia_snapshot:payload.eficiencia,autor_nome:"Usuário da Plataforma",apagado:false,apagado_em:null}).select().single();
+    if(result.error){console.error(result.error);status.textContent="Não foi possível salvar.";btn.disabled=false;return}
+    const saved=result.data;JUSTIFICATIVAS_ATUAIS.set(justKey(saved.periodo,saved.semana_inicio,saved.regiao,saved.coordenacao,saved.indicador),saved);status.textContent="Justificativa salva.";if(regionSelect?.value)render(regionSelect.value);renderAllRegionTables();setTimeout(fecharJustModal,350);
+  }catch(e){console.error(e);status.textContent="Erro inesperado ao salvar.";btn.disabled=false}
+}
+
+async function apagarJustificativa(encoded){
+  const payload=decodeJustPayload(encoded),key=justKey(payload.periodo,payload.semana_inicio,payload.regiao,payload.coordenacao,payload.indicador),current=JUSTIFICATIVAS_ATUAIS.get(key);
+  if(!current||!sb)return;
+  if(!confirm("Deseja realmente apagar a justificativa desta semana?\n\nO indicador voltará para PENDENTE e nenhum novo e-mail será enviado."))return;
+  const {data,error}=await sb.from("superintendencia_justificativas").update({apagado:true,apagado_em:new Date().toISOString(),autor_nome:"Usuário da Plataforma"}).eq("id",current.id).eq("versao",current.versao).select().maybeSingle();
+  if(error){console.error(error);alert("Não foi possível apagar a justificativa.");return}
+  if(!data){alert("A justificativa foi alterada por outro usuário. Atualizando...");await carregarJustificativasAtuais();return}
+  JUSTIFICATIVAS_ATUAIS.delete(key);if(regionSelect?.value)render(regionSelect.value);renderAllRegionTables();
+}
+
+async function abrirHistoricoJustificativa(encoded){
+  const payload=decodeJustPayload(encoded);if(!abrirModalBase(payload))return;const body=getJustModal().body;
+  if(!sb){body.innerHTML=`<div class="just-empty-history">Conexão com o banco indisponível.</div>`;return}
+  body.innerHTML=`<div class="just-empty-history">Carregando histórico...</div>`;
+  const {data,error}=await sb.from("superintendencia_justificativas").select("periodo,semana_inicio,semana_fim,justificativa,autor_nome,atualizado_em,apagado,apagado_em").eq("regiao",payload.regiao).eq("coordenacao",payload.coordenacao).eq("indicador",payload.indicador).eq("apagado",false).order("semana_inicio",{ascending:false});
+  if(error){body.innerHTML=`<div class="just-empty-history">Não foi possível carregar o histórico.</div>`;return}
+  const rows=data||[];if(!rows.length){body.innerHTML=`<div class="just-empty-history">Nenhuma justificativa registrada.</div>`;return}
+  body.innerHTML=rows.map(j=>{const atual=j.semana_inicio===CURRENT_WEEK_START,cls=atual?"just-week-current":"just-week-history",ini=String(j.semana_inicio||"").split("-").reverse().slice(0,2).join("/"),fim=String(j.semana_fim||"").split("-").reverse().slice(0,2).join("/"),dt=j.atualizado_em?new Date(j.atualizado_em).toLocaleString("pt-BR"):"";return `<div class="${cls}"><div class="just-week-label">${atual?"Semana atual · ":""}${ini} a ${fim}</div><div class="just-comment">${escapeHtml(j.justificativa)}</div><div class="just-meta">${escapeHtml(j.autor_nome||"")} ${dt?`· ${dt}`:""}</div></div>`}).join("");
+}
+
+const ICONS={
+trophy:`<svg viewBox="0 0 24 24"><path d="M8 4h8v4c0 4-2 6-4 6s-4-2-4-6V4Z"></path><path d="M8 6H4c0 4 1.5 6 4.2 6"></path><path d="M16 6h4c0 4-1.5 6-4.2 6"></path><path d="M12 14v4"></path><path d="M8 21h8"></path><path d="M9 18h6"></path></svg>`,
+users:`<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.9"></path><path d="M16 3.1a4 4 0 0 1 0 7.8"></path></svg>`,
+bars:`<svg viewBox="0 0 24 24"><path d="M4 20V10h4v10H4Z"></path><path d="M10 20V4h4v16h-4Z"></path><path d="M16 20V7h4v13h-4Z"></path></svg>`,
+cart:`<svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6H18a2 2 0 0 0 1.9-1.4L22 7H6"></path></svg>`,
+clipboard:`<svg viewBox="0 0 24 24"><path d="M8 4h8"></path><path d="M9 2h6v4H9z"></path><path d="M6 4H5a2 2 0 0 0-2 2v15h18V6a2 2 0 0 0-2-2h-1"></path><path d="M8 10h8"></path><path d="M8 14h8"></path></svg>`,
+helmet:`<svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0"></path><path d="M12 7v8"></path><path d="M7 9.5 9 15"></path><path d="M17 9.5 15 15"></path><path d="M3 15h18v3H3z"></path></svg>`,
+arrowUp:`<svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="m6 11 6-6 6 6"></path></svg>`,
+arrowDown:`<svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="m6 13 6 6 6-6"></path></svg>`
+};
+
+function number(v){
+  if(v===null||v===undefined||v==="")return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+
+function formatNumber(v,d=1){
+  const n=number(v);
+  if(n===null)return "-";
+  return Number(n.toFixed(d)).toLocaleString(
+    "pt-BR",
+    {minimumFractionDigits:0,maximumFractionDigits:d}
+  );
+}
+
+function formatPoints(v){return formatNumber(v,3)}
+function formatScore(v){return formatNumber(v,1)}
+
+function isPlanPhysicalIndicator(ind){
+  const raw=String(ind||"").trim().toUpperCase();
+  const t=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  return t.includes("CUMPRIMENTO DO PLANO FISICO PERDAS")
+      || t.includes("CUMPRIMENTO DO PLANO FISICO CORE");
+}
+
+function isPercentIndicator(ind){
+  const raw=String(ind||"").trim().toUpperCase();
+  const t=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+
+  // O "%" pertence ao nome desses indicadores, não aos valores.
+  if(isPlanPhysicalIndicator(ind)) return false;
+
+  return (
+    raw.startsWith("%") ||
+    raw.includes("AIS%") ||
+    t.includes("CLIENTES LIDOS") ||
+    t.includes("CLIENTES NAO LIDOS") ||
+    t.includes("ADERENCIA DE ENTREGA DE FATURA") ||
+    t.includes("ERRO DE LEITURA")
+  );
+}
+
+function formatDataValue(v,ind){
+  const n=number(v);
+
+  if(n===null){
+    return(v===null||v===undefined||v==="")?"-":String(v);
+  }
+
+  if(isPercentIndicator(ind)){
+    const p=Math.abs(n)<=2?n*100:n;
+    return p.toLocaleString(
+      "pt-BR",
+      {minimumFractionDigits:0,maximumFractionDigits:2}
+    )+"%";
+  }
+
+  return n.toLocaleString(
+    "pt-BR",
+    {minimumFractionDigits:0,maximumFractionDigits:2}
+  );
+}
+
+function formatPreviousMonth(v){
+  const n=number(v);
+
+  if(n===null){
+    return(v===null||v===undefined||v==="")?"-":String(v);
+  }
+
+  const p=Math.abs(n)<=2?n*100:n;
+
+  return p.toLocaleString(
+    "pt-BR",
+    {minimumFractionDigits:0,maximumFractionDigits:1}
+  )+"%";
+}
+
+function formatWeight(v){
+  const n=number(v);
+  if(n===null)return "-";
+  const p=Math.abs(n)<=1?n*100:n;
+  return Math.round(p).toLocaleString("pt-BR")+"%";
+}
+
+function formatAdvance(v){
+  if(v===null||v===undefined||v==="")return "-";
+
+  const n=number(v);
+
+  if(n===null){
+    const t=String(v).trim().toUpperCase();
+    let cls="irl-zero";
+
+    if(t==="SEGURO") cls="irl-seguro";
+    else if(t==="ACEITÁVEL"||t==="ACEITAVEL") cls="irl-aceitavel";
+    else if(t==="TOLERÁVEL"||t==="TOLERAVEL") cls="irl-toleravel";
+    else if(t==="CRÍTICO"||t==="CRITICO") cls="irl-critico";
+
+    return `<span class="irl ${cls}">${v}</span>`;
+  }
+
+  const pct=Math.round(n*100);
+  const cls=pct>=100?"advance-ok":"advance-bad";
+
+  return `<span class="advance-badge ${cls}">${pct.toLocaleString("pt-BR")}%</span>`;
+}
+
+function renderPerformance(v){
+  if(v===null||v===undefined||v==="")return "-";
+
+  if(typeof v==="string"){
+    const raw=v.trim();
+    const x=raw.toUpperCase();
+    if(raw==="↑"||raw==="⬆"||x==="MELHORA"||x==="MELHOR"||x==="UP"||x==="ALTA")
+      return `<span class="performance up">${ICONS.arrowUp}</span>`;
+    if(raw==="↓"||raw==="⬇"||x==="PIORA"||x==="PIOR"||x==="DOWN"||x==="BAIXA")
+      return `<span class="performance down">${ICONS.arrowDown}</span>`;
+    if(raw==="="||x==="IGUAL"||x==="ESTÁVEL"||x==="ESTAVEL")
+      return `<span class="performance equal">=</span>`;
+
+    const normalized=raw.replace("%","").replace(",",".");
+    const parsed=Number(normalized);
+    if(Number.isFinite(parsed)){
+      if(Math.abs(parsed)<1e-12)return `<span class="performance equal">=</span>`;
+      return parsed>0
+        ? `<span class="performance up">${ICONS.arrowUp}</span>`
+        : `<span class="performance down">${ICONS.arrowDown}</span>`;
+    }
+  }
+
+  const n=number(v);
+  if(n!==null){
+    if(Math.abs(n)<1e-12)return `<span class="performance equal">=</span>`;
+    return n>0
+      ? `<span class="performance up">${ICONS.arrowUp}</span>`
+      : `<span class="performance down">${ICONS.arrowDown}</span>`;
+  }
+
+  return "-";
+}
+
+function renderPerformanceRow(row){
+  const atual=number(row?.["Avanço"]);
+  const anterior=number(row?.["Mês Anterior"]);
+
+  if(atual!==null&&anterior!==null){
+    const diff=atual-anterior;
+    if(Math.abs(diff)<1e-9)return `<span class="performance equal">=</span>`;
+    return diff>0
+      ? `<span class="performance up">${ICONS.arrowUp}</span>`
+      : `<span class="performance down">${ICONS.arrowDown}</span>`;
+  }
+
+  return renderPerformance(row?.["Desempenho"]);
+}
+
+function renderEfficiency(v){
+  const x=String(v||"");
+
+  if(x==="✅")return `<span class="eff ok">✓</span>`;
+  if(x==="⚠️")return `<span class="eff warn">!</span>`;
+  if(x==="❌")return `<span class="eff bad">×</span>`;
+
+  return "-";
+}
+
+function rowsFor(region,coord){
+  return DATA.filter(
+    r=>r["Região"]===region&&r["Coordenação"]===coord
+  );
+}
+
+function totalScore(rows){
+  return rows.reduce(
+    (s,r)=>s+(number(r["Score"])||0),
+    0
+  );
+}
+
+function coordinationScores(region){
+  return COORD_ORDER
+    .filter(c=>c!=="Gerência")
+    .map(coord=>({
+      coord,
+      rows:rowsFor(region,coord)
+    }))
+    .filter(x=>x.rows.length)
+    .map(x=>({
+      coord:x.coord,
+      score:totalScore(x.rows)
+    }));
+}
+
+function regionScore(region){
+  const scores=coordinationScores(region).map(x=>x.score);
+  if(!scores.length)return 0;
+  return scores.reduce((a,b)=>a+b,0)/scores.length;
+}
+
+function rankingFor(region){
+  const ranking=REGION_ORDER
+    .filter(r=>coordinationScores(r).length)
+    .map(r=>({
+      region:r,
+      score:regionScore(r)
+    }))
+    .sort((a,b)=>b.score-a.score);
+
+  const current=ranking.find(x=>x.region===region);
+  if(!current)return 0;
+
+  const higherScores=[
+    ...new Set(
+      ranking
+        .filter(x=>x.score>current.score+1e-9)
+        .map(x=>x.score)
+    )
+  ];
+
+  return higherScores.length+1;
+}
+
+function table(rows,totalLabel,scoreOverride=null,mode="general"){
+  const normalized=rows
+    .filter(r=>String(r["Indicador"]??"").trim()!=="")
+    .map(r=>({...r}));
+
+  let lastBlock="";
+
+  normalized.forEach(r=>{
+    const indicador=String(r["Indicador"]??"").trim().toUpperCase();
+    let raw=String(r["Blocos"]??"").trim();
+
+    // PERDAS possui somente o indicador IEN.
+    // Evita qualquer bloco/linha fantasma de PERDAS em outros indicadores.
+    if(raw.toUpperCase()==="PERDAS" && !indicador.startsWith("IEN")){
+      raw="";
+    }
+
+    if(raw&&raw!=="-")lastBlock=raw;
+
+    if(indicador.startsWith("IEN")){
+      r.__block="PERDAS";
+      lastBlock="PERDAS";
+    }else{
+      r.__block=raw&&raw!=="-"?raw:lastBlock;
+    }
+  });
+
+  const groups=[];
+  let i=0;
+  while(i<normalized.length){
+    const block=normalized[i].__block;
+    let j=i+1;
+    while(j<normalized.length&&normalized[j].__block===block)j++;
+    groups.push({start:i,count:j-i,block:block||"-"});
+    i=j;
+  }
+
+  const rowSpanMap={};
+  groups.forEach(g=>rowSpanMap[g.start]=g);
+
+  const body=normalized.map((r,idx)=>{
+    let blockCell="";
+    if(rowSpanMap[idx]){
+      const g=rowSpanMap[idx];
+      blockCell=`<td class="block-label" rowspan="${g.count}">${g.block}</td>`;
+    }
+
+    return `<tr>
+      ${blockCell}
+      <td class="indicator-name">${r["Indicador"]??"-"}</td>
+      <td class="planned-cell">${formatDataValue(r["Planejado"],r["Indicador"])}</td>
+      <td>${formatDataValue(r["Realizado"],r["Indicador"])}</td>
+      <td class="point-cell calc-col">${formatPoints(r["Pontos"])}</td>
+      <td class="weight-cell calc-col">${formatWeight(r["Peso"])}</td>
+      <td class="score-cell calc-col">${formatScore(r["Score"])}</td>
+      <td>${formatAdvance(r["Avanço"])}</td>
+      <td>${renderPerformanceRow(r)}</td>
+      <td>${formatPreviousMonth(r["Mês Anterior"])}</td>
+      <td>${renderEfficiency(r["Eficiência"])}</td>
+      ${justificativaCells(r,mode)}
+    </tr>`;
+  }).join("");
+
+  const tableId=`tbl-${Math.random().toString(36).slice(2)}`;
+  const score=formatScore(scoreOverride===null?totalScore(rows):scoreOverride);
+
+  return `<div class="data-table-block">
+    <div class="table-card-head">
+      <div class="table-total-score">${totalLabel}: <strong>${score}</strong></div>
+      <div class="table-card-actions">
+        ${mode==="tables"
+          ?`<button class="toggle-actions" type="button" onclick="toggleActionsColumns('${tableId}',this)">Mostrar Ações</button>`
+          :`<button class="toggle-calc" type="button" onclick="toggleCalcColumns('${tableId}',this)">Mostrar Pontos, Peso e Score</button>`}
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="${tableId}">
+        <thead><tr>
+          <th>Blocos</th><th>Indicador</th><th>Planejado</th><th>Realizado</th>
+          <th class="calc-col">Pontos</th><th class="calc-col">Peso</th><th class="calc-col">Score</th>
+          <th>Avanço</th><th>Desempenho</th><th>Mês Anterior</th><th>Eficiência</th><th>Justificativa</th>
+          ${mode==="tables"?'<th class="just-actions-col">Ações</th>':""}
+        </tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function toggleCalcColumns(tableId,button){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.classList.toggle("show-calc");
+  button.textContent=table.classList.contains("show-calc")
+    ? "Ocultar Pontos, Peso e Score"
+    : "Mostrar Pontos, Peso e Score";
+}
+
+function renderManager(region){
+  const rows=rowsFor(region,"Gerência");
+  const rank=rankingFor(region);
+
+  managerCard.innerHTML=`<div class="card manager-card">
+    <div class="manager-head">
+
+      <div class="manager-title">
+        <h2>Resumo da Gerência</h2>
+        <p>Desempenho consolidado dos principais indicadores da região.</p>
+      </div>
+
+      <div class="kpi-row">
+
+        <div class="kpi-card">
+          <div class="kpi-icon">${ICONS.trophy}</div>
+
+          <div class="kpi-copy">
+            <small>Nota da Gerência</small>
+            <span class="kpi-value">${formatScore(regionScore(region))}</span>
+            <div class="kpi-sub">resultado atual</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">${ICONS.bars}</div>
+
+          <div class="kpi-copy">
+            <small>Ranking da Região</small>
+            <span class="kpi-value">${rankDisplay(rank,"trophy")}</span>
+            <div class="kpi-sub">
+              de ${REGION_ORDER.filter(r=>rowsFor(r,"Gerência").length).length} regiões
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    ${table(rows,"NOTA DA GERÊNCIA",regionScore(region))}
+  </div>`;
+}
+
+function coordIcon(c){
+  if(c==="Varejo")return ICONS.cart;
+  if(c==="Projetos Especiais e Grandes Clientes")return ICONS.users;
+  if(c==="Leitura")return ICONS.clipboard;
+  if(c==="Construção")return ICONS.helmet;
+  return ICONS.bars;
+}
+
+function fakeSpark(score){
+  const base=Math.max(50,Math.min(100,score));
+
+  const vals=[
+    base-11,base-9,base-12,base-7,base-5,base-2,
+    base,base-2,base-1,base+4,base+1,base+7
+  ];
+
+  const mn=Math.min(...vals);
+  const mx=Math.max(...vals);
+  const w=120;
+  const h=34;
+
+  const pts=vals.map(
+    (v,i)=>[
+      i*(w/(vals.length-1)),
+      h-((v-mn)/(mx-mn||1))*25-4
+    ]
+  );
+
+  const line=pts
+    .map((p,i)=>`${i===0?"M":"L"} ${p[0]} ${p[1]}`)
+    .join(" ");
+
+  const area=`${line} L ${w} ${h} L 0 ${h} Z`;
+
+  return `<svg viewBox="0 0 120 34" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#009B91" stop-opacity=".24"/>
+        <stop offset="100%" stop-color="#009B91" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <path class="area" fill="url(#sparkGrad)" d="${area}"></path>
+    <path class="line" d="${line}"></path>
+  </svg>`;
+}
+
+function renderCoords(region){
+  const coords=COORD_ORDER.filter(
+    c=>c!=="Gerência"&&rowsFor(region,c).length
+  );
+
+  coordSubtitle.textContent=
+    `Desempenho das coordenações que compõem a região ${region}.`;
+
+  coordGrid.innerHTML=coords.map(c=>{
+    const rows=rowsFor(region,c);
+    const sc=totalScore(rows);
+
+    return `<div class="coord-card">
+      <div class="coord-card-top">
+        <div class="coord-name">
+          ${coordIcon(c)}
+          <span>${c}</span>
+        </div>
+
+        <div class="chevron">›</div>
+      </div>
+
+      <div class="coord-main">
+        <div>
+          <span class="coord-score">${formatScore(sc)}</span>
+        </div>
+
+        <div class="spark">${fakeSpark(sc)}</div>
+      </div>
+
+      <div class="coord-foot">
+        <small>Período atual</small>
+        <span class="pill">Resultado calculado</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  detailArea.innerHTML=coords.map(
+    c=>`<div class="card detail-panel">
+      <h3>${c}</h3>
+      ${table(rowsFor(region,c),"NOTA DA COORDENAÇÃO")}
+    </div>`
+  ).join("");
+}
+
+
+function ordinal(n){
+  return `${n}º`;
+}
+
+function coordRankHeaderIcon(coord){
+  if(coord==="Varejo"){
+    return `<span class="coord-rank-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6H18a2 2 0 0 0 1.9-1.4L22 7H6"></path></svg></span>`;
+  }
+  if(coord==="Projetos Especiais e Grandes Clientes"){
+    return `<span class="coord-rank-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.9"></path><path d="M16 3.1a4 4 0 0 1 0 7.8"></path></svg></span>`;
+  }
+  if(coord==="Leitura"){
+    return `<span class="coord-rank-icon"><svg viewBox="0 0 24 24"><path d="M8 4h8"></path><path d="M9 2h6v4H9z"></path><path d="M6 4H5a2 2 0 0 0-2 2v15h18V6a2 2 0 0 0-2-2h-1"></path><path d="M8 10h8"></path><path d="M8 14h8"></path></svg></span>`;
+  }
+  if(coord==="Construção"){
+    return `<span class="coord-rank-icon"><svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0"></path><path d="M12 7v8"></path><path d="M7 9.5 9 15"></path><path d="M17 9.5 15 15"></path><path d="M3 15h18v3H3z"></path></svg></span>`;
+  }
+  return `<span class="coord-rank-icon">${ICONS.bars}</span>`;
+}
+
+function sectionHeadingHTML(coord,label,subtitle=""){
+  return `<div class="section-heading">
+    ${coordRankHeaderIcon(coord)}
+    <div class="section-heading-text">
+      <strong>${label}</strong>
+      ${subtitle ? `<small>${subtitle}</small>` : ``}
+    </div>
+  </div>`;
+}
+
+function selectedEvolutionRegions(){
+  const selected=[...evolutionRegionMenu.querySelectorAll('input[type="checkbox"]:checked')].map(i=>i.value);
+  return selected.length?selected:REGION_ORDER.filter(r=>DATA.some(x=>x["Região"]===r));
+}
+
+function updateRegionToggleLabel(){
+  const selected=selectedEvolutionRegions();
+  if(selected.length===0){
+    evolutionRegionToggle.textContent="Selecionar regiões";
+    return;
+  }
+  if(selected.length===1){
+    evolutionRegionToggle.textContent=selected[0];
+    return;
+  }
+  if(selected.length===REGION_ORDER.filter(r=>DATA.some(x=>x["Região"]===r)).length){
+    evolutionRegionToggle.textContent="Todas as regiões";
+    return;
+  }
+  evolutionRegionToggle.textContent=`${selected.length} regiões selecionadas`;
+}
+
+function trophySvg(position){
+  const cls=position===1?"gold":position===2?"silver":"bronze";
+  return `<svg class="rank-icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M8 4h8v4c0 4-2 6-4 6s-4-2-4-6V4Z" fill="currentColor" opacity=".95"></path>
+    <path d="M8 6H4c0 3.6 1.5 5.5 4.3 5.8M16 6h4c0 3.6-1.5 5.5-4.3 5.8" fill="none" stroke="currentColor" stroke-width="2"></path>
+    <path d="M12 14v4M8.5 21h7M9.5 18h5" fill="none" stroke="currentColor" stroke-width="2"></path>
+    <text x="12" y="10.4" text-anchor="middle" font-size="7.2" font-weight="900" fill="#fff" stroke="none">${position}</text>
+  </svg>`;
+}
+
+function medalSvg(position){
+  const cls=position===1?"gold":position===2?"silver":"bronze";
+  return `<svg class="rank-icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M7 2h4l2 7-4 2-2-9Z" fill="currentColor" opacity=".82"></path>
+    <path d="M17 2h-4l-2 7 4 2 2-9Z" fill="currentColor" opacity=".62"></path>
+    <circle cx="12" cy="14.5" r="6" fill="currentColor"></circle>
+    <text x="12" y="17.2" text-anchor="middle" font-size="8" font-weight="900" fill="#fff">${position}</text>
+  </svg>`;
+}
+
+function rankDisplay(position,kind="medal"){
+  if(!position)return "-";
+  if(position<=3){
+    const icon=kind==="trophy"?trophySvg(position):medalSvg(position);
+    return `<span class="rank-display">${icon}</span>`;
+  }
+  return `<span class="rank-number">${ordinal(position)}</span>`;
+}
+
+function rankingListFor(coord){
+  const sorted=REGION_ORDER
+    .map(region=>{
+      if(coord==="Gerência"){
+        const scores=coordinationScores(region);
+        return scores.length
+          ? {region,score:regionScore(region)}
+          : null;
+      }
+
+      const rows=rowsFor(region,coord);
+      return rows.length
+        ? {region,score:totalScore(rows)}
+        : null;
+    })
+    .filter(Boolean)
+    .sort((a,b)=>b.score-a.score);
+
+  let lastScore=null;
+  let lastPosition=0;
+
+  return sorted.map((x,i)=>{
+    const sameAsPrevious=
+      lastScore!==null &&
+      Math.abs(x.score-lastScore)<1e-9;
+
+    const position=sameAsPrevious
+      ? lastPosition
+      : i+1;
+
+    lastScore=x.score;
+    lastPosition=position;
+
+    return {...x,position};
+  });
+}
+
+function positionFor(region,coord){
+  const list=rankingListFor(coord);
+  const found=list.find(x=>x.region===region);
+  return found?found.position:null;
+}
+
+function renderRankings(region){
+  const gerenciaRanking=rankingListFor("Gerência");
+
+  const coordColumns=[
+    {key:"Varejo",label:"Varejo"},
+    {key:"Projetos Especiais e Grandes Clientes",label:"Grandes Clientes"},
+    {key:"Leitura",label:"Leitura"},
+    {key:"Construção",label:"Construção"}
+  ];
+
+  const rows=gerenciaRanking.map(item=>{
+    const coordCells=coordColumns.map(c=>{
+      const pos=positionFor(item.region,c.key);
+      return `<td class="rank-cell">${pos?rankDisplay(pos,"medal"):"-"}</td>`;
+    }).join("");
+
+    return `<tr class="${item.position<=3?`rank-${item.position}`:""} ${item.region===region?"selected-region":""}">
+      <td class="rank-pos rank-cell">${rankDisplay(item.position,"trophy")}</td>
+      <td><strong>${item.region}</strong></td>
+      <td class="rank-score">${formatScore(item.score)}</td>
+      ${coordCells}
+    </tr>`;
+  }).join("");
+
+  rankingOverview.innerHTML=`
+    <div class="ranking-main">
+      <table>
+        <thead>
+          <tr>
+            <th>Posição</th>
+            <th>Região</th>
+            <th>Score</th>
+            <th>Varejo</th>
+            <th>Grandes Clientes</th>
+            <th>Leitura</th>
+            <th>Construção</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  miniRankings.innerHTML=coordColumns.map(def=>{
+    const list=rankingListFor(def.key);
+
+    if(!list.length)return "";
+
+    const body=list.map(item=>`
+      <tr class="${item.position<=3?`rank-${item.position}`:""} ${item.region===region?"selected-region":""}">
+        <td class="rank-pos rank-cell">${rankDisplay(item.position,"medal")}</td>
+        <td><strong>${item.region}</strong></td>
+        <td class="rank-score">${formatScore(item.score)}</td>
+      </tr>
+    `).join("");
+
+    return `<div class="mini-ranking">
+      <h3>
+        ${coordRankHeaderIcon(def.key)}
+        <span class="coord-rank-copy">
+          <strong>${def.label}</strong>
+          <small>Ranking das regiões</small>
+        </span>
+      </h3>
+      <table>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+  }).join("");
+}
+
+function numericAdvance(row){
+  return number(row?.["Avanço"]);
+}
+
+function previousAdvance(row){
+  return number(row?.["Mês Anterior"]);
+}
+
+function chartBounds(values,kind="percent"){
+  const finite=values.filter(v=>Number.isFinite(v));
+
+  if(!finite.length)return {min:0,max:1};
+
+  let min=Math.min(...finite);
+  let max=Math.max(...finite);
+  let range=max-min;
+
+  // Evita exagerar visualmente diferenças pequenas.
+  // Percentual: amplitude mínima de 5 p.p.
+  // Score: amplitude mínima de 1,5 ponto.
+  const minSpan = kind==="score" ? 1.5 : 0.05;
+
+  if(range < minSpan){
+    const center=(min+max)/2;
+    min=center-minSpan/2;
+    max=center+minSpan/2;
+    range=minSpan;
+  }
+
+  // Mantém alguma respiração visual, mas evita grandes áreas vazias.
+  const lowerPad=range*0.05;
+  const upperPad=range*0.08;
+
+  return {
+    min:min-lowerPad,
+    max:max+upperPad
+  };
+}
+
+function svgTextEscape(value){
+  return String(value??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;");
+}
+
+function attrEscape(value){
+  return svgTextEscape(value).replaceAll('"','&quot;');
+}
+
+function pctLabel(v){
+  if(!Number.isFinite(v))return "-";
+  return `${(v*100).toLocaleString("pt-BR",{maximumFractionDigits:1})}%`;
+}
+
+function scoreLabel(v){
+  if(!Number.isFinite(v))return "-";
+  return v.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
+}
+
+function groupedBarChart(data){
+  if(!data.length){
+    return `<div class="empty-state">Não há dados numéricos disponíveis para este indicador.</div>`;
+  }
+
+  const values=data.flatMap(d=>[d.previous,d.current]).filter(Number.isFinite);
+  if(!values.length){
+    return `<div class="empty-state">Este indicador não possui avanço numérico para comparação.</div>`;
+  }
+
+  const W=980,H=305;
+  const margin={top:18,right:18,bottom:34,left:20};
+  const innerW=W-margin.left-margin.right;
+  const innerH=H-margin.top-margin.bottom;
+  const bounds=chartBounds(values,"percent");
+  const y=v=>margin.top+(bounds.max-v)/(bounds.max-bounds.min)*innerH;
+
+  const groupW=innerW/data.length;
+  const barW=Math.min(34,groupW*0.28);
+  const baseline=y(bounds.min);
+
+  const grid="";
+
+  const bars=data.map((d,i)=>{
+    const center=margin.left+groupW*i+groupW/2;
+    const xPrev=center-barW-3;
+    const xCur=center+3;
+    const prevY=y(d.previous);
+    const curY=y(d.current);
+
+    const prevH=Math.max(1,baseline-prevY);
+    const curH=Math.max(1,baseline-curY);
+
+    return `
+      <g class="chart-mark" data-tooltip="${attrEscape(`${d.region}\n${PREVIOUS_PERIOD}: ${pctLabel(d.previous)}`)}">
+        <rect x="${xPrev}" y="${prevY}" width="${barW}" height="${prevH}" rx="4" fill="#CDCDCD"/>
+        <text x="${xPrev+barW/2}" y="${prevY-7}" text-anchor="middle" font-size="11" font-weight="800" fill="#5c6664">${pctLabel(d.previous)}</text>
+      </g>
+
+      <g class="chart-mark" data-tooltip="${attrEscape(`${d.region}\n${CURRENT_PERIOD}: ${pctLabel(d.current)}`)}">
+        <rect x="${xCur}" y="${curY}" width="${barW}" height="${curH}" rx="4" fill="#009B91"/>
+        <text x="${xCur+barW/2}" y="${curY-7}" text-anchor="middle" font-size="11" font-weight="900" fill="#005852">${pctLabel(d.current)}</text>
+      </g>
+
+      <text x="${center}" y="${H-10}" text-anchor="middle"
+            font-size="12" font-weight="800" fill="#354844">${svgTextEscape(d.region)}</text>
+    `;
+  }).join("");
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    ${grid}
+    ${bars}
+  </svg>`;
+}
+
+function multiSeriesBarChart(series,formatter="score"){
+  const usable=series
+    .map(s=>({...s,points:s.points.filter(p=>Number.isFinite(p.value))}))
+    .filter(s=>s.points.length);
+
+  if(!usable.length){
+    return `<div class="empty-state">Não há dados disponíveis.</div>`;
+  }
+
+  const labels=[...new Set(usable.flatMap(s=>s.points.map(p=>p.label)))];
+  const allValues=usable.flatMap(s=>s.points.map(p=>p.value));
+
+  const W=980,H=315;
+  const margin={top:20,right:18,bottom:34,left:20};
+  const innerW=W-margin.left-margin.right;
+  const innerH=H-margin.top-margin.bottom;
+
+  const bounds=chartBounds(
+    allValues,
+    formatter==="score" ? "score" : "percent"
+  );
+
+  const y=v=>margin.top+(bounds.max-v)/(bounds.max-bounds.min)*innerH;
+  const fmt=formatter==="percent" ? pctLabel : scoreLabel;
+
+  // Paleta mais neutra para Evolução Temporal.
+  const palette=["#009B91","#B8873B","#666666","#5F9E99","#A58E6C"];
+  const labelPalette=["#005852","#7A5928","#414141","#466F6B","#705F49"];
+
+  const groupW=innerW/Math.max(labels.length,1);
+  const barW=Math.min(50,groupW/(usable.length+1));
+
+  let bars="";
+
+  labels.forEach((lab,li)=>{
+    const center=margin.left+groupW*(li+.5);
+
+    usable.forEach((ser,si)=>{
+      const p=ser.points.find(x=>x.label===lab);
+      if(!p)return;
+
+      const x=center-(usable.length*barW)/2+si*barW;
+      const top=y(p.value);
+      const base=H-margin.bottom;
+      const h=Math.max(2,base-top);
+
+      const labelColor=
+        ser.name==="Oeste" ? "#466F6B" :
+        ser.name==="Vale" ? "#705F49" :
+        labelPalette[si%labelPalette.length];
+
+      const tip=`${ser.name}\n${lab}: ${fmt(p.value)}`;
+
+      bars+=`
+        <g class="chart-mark" data-tooltip="${attrEscape(tip)}">
+          <rect
+            x="${x}"
+            y="${top}"
+            width="${barW-5}"
+            height="${h}"
+            rx="4"
+            fill="${palette[si%palette.length]}"
+          />
+          <text
+            x="${x+(barW-5)/2}"
+            y="${top-7}"
+            text-anchor="middle"
+            font-size="11"
+            font-weight="900"
+            fill="${labelColor}"
+          >${fmt(p.value)}</text>
+        </g>
+      `;
+    });
+
+    bars+=`
+      <text
+        x="${center}"
+        y="${H-10}"
+        text-anchor="middle"
+        font-size="12"
+        font-weight="800"
+        fill="#354844"
+      >${svgTextEscape(lab)}</text>
+    `;
+  });
+
+  const legend=usable.map((s,si)=>`
+    <span class="legend-item">
+      <span class="legend-swatch" style="background:${palette[si%palette.length]}"></span>
+      ${svgTextEscape(s.name)}
+    </span>
+  `).join("");
+
+  return `
+    <div class="chart-legend">${legend}</div>
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${bars}
+    </svg>
+  `;
+}
+
+function previousPointsForRow(row){
+  const coord=String(row["Coordenação"]||"").toUpperCase();
+  const ind=String(row["Indicador"]||"").toUpperCase();
+  const a=previousAdvance(row);
+
+  if(ind==="IRL"){
+    const s=String(row["Mês Anterior"]||"").trim().toUpperCase();
+    if(s==="SEGURO")return 1;
+    if(s==="ACEITÁVEL"||s==="ACEITAVEL")return .9;
+    if(s==="TOLERÁVEL"||s==="TOLERAVEL")return .8;
+    return 0;
+  }
+
+  if(a===null)return null;
+
+  if(coord==="GERÊNCIA"){
+    if(ind.startsWith("IEN")){
+      return a<.90?0:(Math.min(a,1)-.90)/.10;
+    }
+    if(ind==="CAPEX R$ MM")return a>=.90&&a<1.10?1:0;
+    if(ind==="OPEX R$ MM")return a>=.85&&a<1.15?1:0;
+    if(ind==="AIS% REALIZADO R$")return a>=.996?1:(a>=.989?.5:0);
+    if(ind.includes("ATENDIMENTO NO PRAZO")&&ind.includes("SERVIÇOS REGULADOS"))return a>=1?1:0;
+    if(ind==="ARRECADAÇÃO TOTAL EM 12 MESES")return a>=1?1:0;
+    if(ind==="CLIENTES NÃO LIDOS")return a>=1?1:(a>=.98?.5:0);
+  }
+
+  if(coord==="VAREJO"){
+    if(ind.startsWith("IEN")||ind==="ARRECADAÇÃO R$ MM"||ind.includes("CUMPRIMENTO DO PLANO FÍSICO PERDAS")){
+      return a<.99?0:(a<1?.5:.996);
+    }
+    if(ind.includes("RECLAMAÇÃO")&&ind.includes("PROCEDENTE"))return a<.90?0:(Math.min(a,1)-.90)/.10;
+    if(ind.includes("ATENDIMENTO NO PRAZO")&&ind.includes("SERVIÇOS REGULADOS"))return a<.90?0:(Math.min(a,1)-.90)/.10;
+    if(ind.startsWith("IQG - ÍNDICE DE QUALIDADE GERAL"))return a>=1?1:0;
+    if(ind.includes("CUMPRIMENTO DO PLANO FÍSICO CORE"))return a<.99?0:(a<.996?.5:1);
+    if(ind==="AIS% REALIZADO R$")return a<.99?0:(a<1?.5:1);
+    if(ind==="CAPEX R$ MM")return a>=.90&&a<1.10?1:0;
+    if(ind==="OPEX R$ MM")return a>=.85&&a<1.15?1:0;
+  }
+
+  if(coord==="PROJETOS ESPECIAIS E GRANDES CLIENTES"){
+    if(ind.startsWith("IEN")||ind.includes("CUMPRIMENTO DO PLANO FÍSICO PERDAS")||ind.includes("CUMPRIMENTO DO PLANO FÍSICO CORE")){
+      return a<.99?0:(a<.996?.5:1);
+    }
+    if(ind.includes("RECLAMAÇÃO")&&ind.includes("PROCEDENTE"))return a<.90?0:(Math.min(a,1)-.90)/.10;
+    if(ind.includes("ATENDIMENTO NO PRAZO")&&ind.includes("SERVIÇOS REGULADOS"))return a<.90?0:(Math.min(a,1)-.90)/.10;
+    if(ind.startsWith("IQG - ÍNDICE DE QUALIDADE GERAL"))return a>=1?1:0;
+    if(ind==="AIS% REALIZADO R$")return a>=.996?1:(a>=.989?.5:0);
+    if(ind==="CAPEX R$ MM")return a>=.90&&a<1.10?1:0;
+    if(ind==="OPEX R$ MM")return a>=.85&&a<1.15?1:0;
+  }
+
+  if(coord==="LEITURA"){
+    if(ind==="CORTE NO DISJUNTOR"||ind==="CLIENTES NÃO LIDOS"){
+      return a>=.996?1:(a>=.989?.5:0);
+    }
+    if(ind==="ERRO DE LEITURA"){
+      return a>=.996?1:(a>=.989?.5:(a>=.969?.2:0));
+    }
+    if(ind==="ADERÊNCIA DE ENTREGA DE FATURA"){
+      return a>=.999?1:(a>=.986?.5:0);
+    }
+  }
+
+  if(coord==="CONSTRUÇÃO"){
+    if(ind.startsWith("IEN"))return a<.90?0:(Math.min(a,1)-.90)/.10;
+    if(ind==="CAPEX R$ MM")return a>=.90&&a<1.10?1:0;
+    if(ind==="OPEX R$ MM")return a>=.85&&a<1.15?1:0;
+    if(ind==="AIS% REALIZADO R$")return a>=.996?1:(a>=.989?.5:0);
+    if(ind.startsWith("IQG - ÍNDICE DE QUALIDADE GERAL"))return a>=1?1:0;
+    if(ind.includes("CUMPRIMENTO DO PLANO FÍSICO PERDAS"))return a>=1?1:0;
+  }
+
+  return null;
+}
+
+function historicalScore(rows){
+  return rows.reduce((sum,row)=>{
+    const points=previousPointsForRow(row);
+    const weight=number(row["Peso"]);
+
+    if(points===null||weight===null)return sum;
+
+    const w=Math.abs(weight)<=1?weight:weight/100;
+    return sum+(points*w*10);
+  },0);
+}
+
+
+function renderAllRegionTables(){
+  if(!allRegionTables)return;
+
+  allRegionTables.innerHTML=REGION_ORDER.map(region=>{
+    const content=COORD_ORDER
+      .filter(coord=>rowsFor(region,coord).length)
+      .map(coord=>{
+        const label=
+          coord==="Projetos Especiais e Grandes Clientes"
+            ?"Grandes Clientes"
+            :coord;
+
+        return `<section class="card all-tables-card">
+          <div class="region-table-title">${region} — ${label}</div>
+          ${table(rowsFor(region,coord),"",null,"tables")}
+        </section>`;
+      })
+      .join("");
+
+    if(!content)return "";
+
+    return `
+      <div class="region-boundary start">INÍCIO — REGIÃO ${region}</div>
+      ${content}
+      <div class="region-boundary end">FIM — REGIÃO ${region}</div>
+    `;
+  }).join("");
+
+}
+
+function renderComparisonAll(){
+  const coordLabels={
+    "Gerência":"Gerência",
+    "Varejo":"Varejo",
+    "Projetos Especiais e Grandes Clientes":"Grandes Clientes",
+    "Leitura":"Leitura",
+    "Construção":"Construção"
+  };
+
+  comparisonSections.innerHTML=COORD_ORDER.map(coord=>{
+    const indicators=[...new Set(DATA.filter(r=>r["Coordenação"]===coord).map(r=>String(r["Indicador"]??"").trim()).filter(Boolean))];
+    if(!indicators.length)return "";
+
+    const charts=indicators.map(ind=>{
+      const data=REGION_ORDER.map(region=>{
+        const row=DATA.find(r=>r["Região"]===region&&r["Coordenação"]===coord&&r["Indicador"]===ind);
+        if(!row)return null;
+        const previous=previousAdvance(row);
+        const current=numericAdvance(row);
+        return Number.isFinite(previous)&&Number.isFinite(current)?{region,previous,current}:null;
+      }).filter(Boolean);
+
+      return `<div class="chart-box comparison-card">
+        <h3 class="chart-title">${ind}</h3>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-swatch legend-prev"></span>${PREVIOUS_PERIOD}</span>
+          <span class="legend-item"><span class="legend-swatch legend-current"></span>${CURRENT_PERIOD}</span>
+        </div>
+        ${groupedBarChart(data)}
+      </div>`;
+    }).join("");
+
+    const sectorLabel=coordLabels[coord]||coord;
+    return `<section class="card chart-section sector-section">
+      ${sectionHeadingHTML(coord,sectorLabel)}
+      <div class="comparison-grid">${charts}</div>
+    </section>`;
+  }).join("");
+}
+
+function availablePeriods(){
+  return [PREVIOUS_PERIOD,CURRENT_PERIOD];
+}
+
+function periodValueForRow(row,period){
+  if(period===CURRENT_PERIOD)return numericAdvance(row);
+  if(period===PREVIOUS_PERIOD)return previousAdvance(row);
+  return null;
+}
+
+function scoreForPeriod(rows,period){
+  if(period===CURRENT_PERIOD)return totalScore(rows);
+  if(period===PREVIOUS_PERIOD)return historicalScore(rows);
+  return null;
+}
+
+function regionScoreForPeriod(region,period){
+  const scores=COORD_ORDER
+    .filter(coord=>coord!=="Gerência")
+    .map(coord=>{
+      const rows=rowsFor(region,coord);
+      if(!rows.length)return null;
+      const score=scoreForPeriod(rows,period);
+      return Number.isFinite(score)?score:null;
+    })
+    .filter(v=>Number.isFinite(v));
+
+  if(!scores.length)return null;
+
+  return scores.reduce((sum,v)=>sum+v,0)/scores.length;
+}
+
+function selectedPeriods(){
+  const periods=availablePeriods();
+  let a=periods.indexOf(evolutionStartMonth.value);
+  let b=periods.indexOf(evolutionEndMonth.value);
+  if(a<0)a=0;
+  if(b<0)b=periods.length-1;
+  if(a>b)[a,b]=[b,a];
+  return periods.slice(a,b+1);
+}
+
+function populateEvolutionFilters(){
+  evolutionRegionMenu.innerHTML="";
+  REGION_ORDER.filter(r=>DATA.some(x=>x["Região"]===r)).forEach(r=>{
+    const checked=r===regionSelect.value ? "checked" : "";
+    evolutionRegionMenu.insertAdjacentHTML("beforeend", `
+      <label class="region-option">
+        <input type="checkbox" value="${r}" ${checked}>
+        <span>${r}</span>
+      </label>
+    `);
+  });
+  updateRegionToggleLabel();
+
+  const periods=availablePeriods();
+  evolutionStartMonth.innerHTML="";
+  evolutionEndMonth.innerHTML="";
+  periods.forEach((p,i)=>{
+    const a=document.createElement("option");a.value=p;a.textContent=p;if(i===0)a.selected=true;evolutionStartMonth.appendChild(a);
+    const b=document.createElement("option");b.value=p;b.textContent=p;if(i===periods.length-1)b.selected=true;evolutionEndMonth.appendChild(b);
+  });
+  updateEvolutionAll();
+}
+
+function updateEvolutionAll(){
+  const regions=selectedEvolutionRegions();
+  updateRegionToggleLabel();
+  const periods=selectedPeriods();
+
+  const managerSeries=regions.map(region=>({
+    name:region,
+    points:periods.map(period=>({
+      label:period,
+      value:regionScoreForPeriod(region,period)
+    }))
+  })).filter(s=>s.points.some(p=>Number.isFinite(p.value)));
+  managerEvolutionChart.innerHTML=multiSeriesBarChart(managerSeries,"score");
+
+  coordEvolutionCharts.innerHTML=COORD_ORDER.filter(c=>c!=="Gerência").map(coord=>{
+    const series=regions.map(region=>({
+      name:region,
+      points:periods.map(period=>({label:period,value:scoreForPeriod(rowsFor(region,coord),period)}))
+    })).filter(s=>s.points.some(p=>Number.isFinite(p.value)));
+    if(!series.length)return "";
+    const coordLabel=coord==="Projetos Especiais e Grandes Clientes"?"Grandes Clientes":coord;
+    return `<div class="chart-box">${sectionHeadingHTML(coord,coordLabel)}${multiSeriesBarChart(series,"score")}</div>`;
+  }).join("");
+
+  indicatorEvolutionSections.innerHTML=COORD_ORDER.map(coord=>{
+    const indicators=[...new Set(DATA.filter(r=>r["Coordenação"]===coord).map(r=>String(r["Indicador"]??"").trim()).filter(Boolean))];
+    if(!indicators.length)return "";
+    const charts=indicators.map(ind=>{
+      const series=regions.map(region=>{
+        const row=DATA.find(r=>r["Região"]===region&&r["Coordenação"]===coord&&r["Indicador"]===ind);
+        if(!row)return null;
+        return {name:region,points:periods.map(period=>({label:period,value:periodValueForRow(row,period)}))};
+      }).filter(Boolean).filter(s=>s.points.some(p=>Number.isFinite(p.value)));
+      if(!series.length)return "";
+      return `<div class="chart-box"><h3 class="chart-title">${ind}</h3>${multiSeriesBarChart(series,"percent")}</div>`;
+    }).join("");
+    if(!charts)return "";
+    const label=coord==="Projetos Especiais e Grandes Clientes"?"Grandes Clientes":coord;
+    return `<section class="sector-subsection">${sectionHeadingHTML(coord,label)}<div class="comparison-grid">${charts}</div></section>`;
+  }).join("");
+}
+
+
+
+function setupChartTooltips(){
+  const tooltip=document.getElementById("chartTooltip");
+  if(!tooltip)return;
+
+  document.addEventListener("mousemove",event=>{
+    const mark=event.target.closest?.(".chart-mark");
+    if(!mark){
+      tooltip.style.display="none";
+      return;
+    }
+
+    const text=mark.getAttribute("data-tooltip");
+    if(!text){
+      tooltip.style.display="none";
+      return;
+    }
+
+    tooltip.textContent=text;
+    tooltip.style.display="block";
+
+    const gap=14;
+    const rect=tooltip.getBoundingClientRect();
+    let left=event.clientX+gap;
+    let top=event.clientY+gap;
+
+    if(left+rect.width>window.innerWidth-8)left=event.clientX-rect.width-gap;
+    if(top+rect.height>window.innerHeight-8)top=event.clientY-rect.height-gap;
+
+    tooltip.style.left=`${Math.max(8,left)}px`;
+    tooltip.style.top=`${Math.max(8,top)}px`;
+  });
+
+  document.addEventListener("mouseleave",()=>{tooltip.style.display="none";});
+}
+
+setupChartTooltips();
+
+function switchView(view){
+  document.querySelectorAll(".view-section").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(el=>el.classList.remove("active"));
+
+  document.getElementById(`view-${view}`).classList.add("active");
+  document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add("active");
+
+  if(view==="tables"){
+    renderAllRegionTables();
+  }
+
+  if(view==="comparison"){
+    renderComparisonAll();
+  }
+
+  if(view==="evolution"){
+    if(!evolutionRegionMenu.children.length){
+      populateEvolutionFilters();
+    }else{
+      updateEvolutionAll();
+    }
+  }
+}
+
+function render(region){
+  renderRankings(region);
+  renderManager(region);
+  renderCoords(region);
+}
+
+REGION_ORDER
+  .filter(r=>DATA.some(x=>x["Região"]===r))
+  .forEach(r=>{
+    const o=document.createElement("option");
+    o.value=r;
+    o.textContent=r;
+    regionSelect.appendChild(o);
+  });
+
+regionSelect.addEventListener("change",()=>{
+  detailArea.classList.remove("open");
+  detailToggle.innerHTML="Ver detalhes das coordenações&nbsp;&nbsp;→";
+  render(regionSelect.value);
+
+  if(evolutionRegionMenu.children.length){
+    [...evolutionRegionMenu.querySelectorAll('input[type="checkbox"]')].forEach(o=>o.checked=(o.value===regionSelect.value));
+    updateRegionToggleLabel();
+    updateEvolutionAll();
+  }
+});
+
+evolutionRegionToggle.addEventListener("click",()=>{
+  evolutionRegionMenu.classList.toggle("open");
+});
+
+document.addEventListener("click",event=>{
+  if(!event.target.closest(".region-dropdown")){
+    evolutionRegionMenu.classList.remove("open");
+  }
+});
+
+evolutionRegionMenu.addEventListener("change",()=>{
+  updateRegionToggleLabel();
+  updateEvolutionAll();
+});
+
+evolutionStartMonth.addEventListener("change",updateEvolutionAll);
+evolutionEndMonth.addEventListener("change",updateEvolutionAll);
+
+document.querySelectorAll(".nav-item[data-view]").forEach(item=>{
+  item.addEventListener("click",()=>switchView(item.dataset.view));
+});
+
+detailToggle.addEventListener("click",()=>{
+  detailArea.classList.toggle("open");
+
+  detailToggle.innerHTML=
+    detailArea.classList.contains("open")
+    ?"Ocultar detalhes&nbsp;&nbsp;↑"
+    :"Ver detalhes das coordenações&nbsp;&nbsp;→";
+});
+
+if(regionSelect.options.length){
+  regionSelect.value=regionSelect.options[0].value;
+  render(regionSelect.value);
+  renderComparisonAll();
+  populateEvolutionFilters();
+  carregarJustificativasAtuais();
+}
+</script>
+
+<div id="chartTooltip" class="chart-tooltip"></div>
+
+<div id="justModalBackdrop" class="just-modal-backdrop">
+  <div class="just-modal">
+    <div class="just-modal-head">
+      <div><h3 id="justModalTitle">Justificativa</h3><p id="justModalSubtitle"></p></div>
+      <button id="justModalClose" class="just-close" type="button">×</button>
+    </div>
+    <div id="justModalBody" class="just-modal-body"></div>
+  </div>
+</div>
 </body>
 </html>
