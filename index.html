@@ -1793,10 +1793,25 @@ const CURRENT_PERIOD="Agosto/2026";
 const PREVIOUS_PERIOD="Julho/2026";
 const SUPABASE_URL="https://dxgaylieybxpdipvzbog.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_bE9KOTCn40C-5L_WfFIrsQ_m6LW6Mlj";
+const SUPABASE_AUTH_URL="https://fjgfwfnnhebfvuvvjsui.supabase.co";
+const SUPABASE_AUTH_PUBLISHABLE_KEY="sb_publishable_QexGHESAqtHDVlI1h3aM1Q_Cew_cax7";
 const CURRENT_WEEK_START="2026-09-21";
 const CURRENT_WEEK_END="2026-09-27";
 const CURRENT_WEEK_LABEL="21/09 a 27/09";
-const sb=(window.supabase&&typeof window.supabase.createClient==="function")?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
+const sb=(window.supabase&&typeof window.supabase.createClient==="function")
+  ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
+  :null;
+
+const authSb=(window.supabase&&typeof window.supabase.createClient==="function")
+  ?window.supabase.createClient(SUPABASE_AUTH_URL,SUPABASE_AUTH_PUBLISHABLE_KEY,{
+      auth:{
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:true
+      }
+    })
+  :null;
+
 const JUSTIFICATIVAS_ATUAIS=new Map();
 
 const AUTH_LOGIN_MAP={
@@ -1832,16 +1847,28 @@ function emailInternoDoLogin(usuario){
   return AUTH_LOGIN_MAP[chave]||null;
 }
 
-async function carregarPerfilAcesso(userId){
-  const {data,error}=await sb
-    .from("superintendencia_perfis")
-    .select("user_id,nome,perfil,ativo")
-    .eq("user_id",userId)
-    .maybeSingle();
+function perfilPorEmail(email){
+  const e=String(email||"").trim().toLowerCase();
 
-  if(error)throw error;
-  return data;
+  if(e==="administrador@superintendencia.example"){
+    return {
+      nome:"Administrador",
+      perfil:"ADMINISTRADOR",
+      ativo:true
+    };
+  }
+
+  if(e==="operacional@superintendencia.example"){
+    return {
+      nome:"Operacional",
+      perfil:"OPERACIONAL",
+      ativo:true
+    };
+  }
+
+  return null;
 }
+
 
 function aplicarPerfilAcesso(perfil){
   CURRENT_ACCESS_PROFILE=perfil;
@@ -1886,35 +1913,28 @@ async function concluirSessao(session){
     return;
   }
 
-  try{
-    const perfil=await carregarPerfilAcesso(session.user.id);
+  const perfil=perfilPorEmail(session.user.email);
 
-    if(!perfil||!perfil.ativo){
-      await sb.auth.signOut();
-      document.body.classList.remove("auth-pending");
-      document.body.classList.add("auth-logged-out");
-      mostrarErroLogin("Usuário sem perfil ativo para esta plataforma.");
-      return;
-    }
-
-    aplicarPerfilAcesso(perfil);
-  }catch(err){
-    console.error(err);
+  if(!perfil||!perfil.ativo){
+    try{ await authSb.auth.signOut(); }catch(_){}
     document.body.classList.remove("auth-pending");
     document.body.classList.add("auth-logged-out");
-    mostrarErroLogin("Não foi possível validar o perfil de acesso.");
+    mostrarErroLogin("Usuário sem perfil válido para esta plataforma.");
+    return;
   }
+
+  aplicarPerfilAcesso(perfil);
 }
 
 async function bootstrapAuth(){
-  if(!sb){
+  if(!authSb){
     document.body.classList.remove("auth-pending");
     document.body.classList.add("auth-logged-out");
     mostrarErroLogin("Serviço de autenticação indisponível.");
     return;
   }
 
-  const {data,error}=await sb.auth.getSession();
+  const {data,error}=await authSb.auth.getSession();
 
   if(error){
     document.body.classList.remove("auth-pending");
@@ -1941,7 +1961,7 @@ loginForm.addEventListener("submit",async event=>{
   loginButton.textContent="Entrando...";
 
   try{
-    const {data,error}=await sb.auth.signInWithPassword({
+    const {data,error}=await authSb.auth.signInWithPassword({
       email,
       password:loginSenha.value
     });
@@ -1961,7 +1981,7 @@ loginForm.addEventListener("submit",async event=>{
 
 logoutButton.addEventListener("click",async()=>{
   try{
-    await sb.auth.signOut();
+    await authSb.auth.signOut();
   }finally{
     CURRENT_ACCESS_PROFILE=null;
     document.body.classList.remove("access-administrador","access-operacional","auth-pending");
