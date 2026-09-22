@@ -1330,10 +1330,206 @@ table.show-actions .just-actions-col{display:table-cell}
   accent-color:#009B91;
 }
 
+
+/* ============================================================
+   LOGIN / CONTROLE DE ACESSO
+   ============================================================ */
+body.auth-pending{
+  overflow:hidden;
+}
+
+.app{
+  transition:opacity .18s ease;
+}
+
+body.auth-pending .app,
+body.auth-logged-out .app{
+  opacity:0;
+  pointer-events:none;
+  user-select:none;
+}
+
+.login-screen{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,155,145,.18), transparent 32%),
+    linear-gradient(145deg,#061f2b 0%,#0a3441 55%,#0b4b50 100%);
+}
+
+body.auth-pending .login-screen,
+body.auth-logged-out .login-screen{
+  display:flex;
+}
+
+body.auth-pending .login-card{
+  opacity:.55;
+  pointer-events:none;
+}
+
+.login-card{
+  width:min(410px,100%);
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 28px 70px rgba(0,0,0,.28);
+  overflow:hidden;
+}
+
+.login-brand{
+  padding:24px 26px 18px;
+  background:#009B91;
+  color:#fff;
+}
+
+.login-brand h1{
+  margin:0;
+  font-size:23px;
+  line-height:1.1;
+}
+
+.login-brand p{
+  margin:7px 0 0;
+  font-size:12px;
+  opacity:.9;
+}
+
+.login-form{
+  padding:24px 26px 26px;
+}
+
+.login-field{
+  margin-bottom:14px;
+}
+
+.login-field label{
+  display:block;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:800;
+  color:#344b48;
+}
+
+.login-field input{
+  width:100%;
+  box-sizing:border-box;
+  height:42px;
+  padding:0 12px;
+  border:1px solid #cddbd9;
+  border-radius:8px;
+  outline:none;
+  font:inherit;
+}
+
+.login-field input:focus{
+  border-color:#009B91;
+  box-shadow:0 0 0 3px rgba(0,155,145,.12);
+}
+
+.login-button{
+  width:100%;
+  height:43px;
+  border:0;
+  border-radius:8px;
+  background:#009B91;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.login-button:disabled{
+  opacity:.6;
+  cursor:wait;
+}
+
+.login-error{
+  display:none;
+  margin-top:12px;
+  padding:9px 10px;
+  border-radius:7px;
+  background:#fff0ef;
+  color:#a3261d;
+  font-size:11px;
+  font-weight:700;
+}
+
+.login-error.show{
+  display:block;
+}
+
+.auth-user-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.auth-role-badge{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#e9f6f4;
+  color:#006b63;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.03em;
+}
+
+.logout-button{
+  border:1px solid #cfdfdd;
+  background:#fff;
+  color:#405653;
+  border-radius:7px;
+  padding:6px 9px;
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+body.access-operacional .nav-item:not([data-view="tables"]){
+  display:none!important;
+}
+
+body.access-operacional #exportButton{
+  display:none!important;
+}
+
+body.access-operacional #view-general,
+body.access-operacional #view-comparison,
+body.access-operacional #view-evolution{
+  display:none!important;
+}
+
 </style>
 </head>
 
-<body>
+<body class="auth-pending">
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <h1>Análise - Superintendência</h1>
+      <p>Acesso à plataforma de desempenho regional</p>
+    </div>
+
+    <form id="loginForm" class="login-form">
+      <div class="login-field">
+        <label for="loginUsuario">Usuário</label>
+        <input id="loginUsuario" type="text" autocomplete="username" placeholder="Administrador ou Operacional" required>
+      </div>
+
+      <div class="login-field">
+        <label for="loginSenha">Senha</label>
+        <input id="loginSenha" type="password" autocomplete="current-password" required>
+      </div>
+
+      <button id="loginButton" class="login-button" type="submit">Entrar</button>
+      <div id="loginError" class="login-error"></div>
+    </form>
+  </div>
+</div>
+
 <div class="app">
 
 <aside class="sidebar">
@@ -1425,9 +1621,14 @@ table.show-actions .just-actions-col{display:table-cell}
     <div class="user-box">
       <div class="avatar">AS</div>
       <div class="user-copy">
-        <strong>Análise - Superintendência⌄</strong>
-        <small>Gestão Regional</small>
+        <strong id="authUserName">Análise - Superintendência</strong>
+        <small id="authUserRole">Gestão Regional</small>
       </div>
+    </div>
+
+    <div class="auth-user-actions">
+      <span id="authRoleBadge" class="auth-role-badge"></span>
+      <button id="logoutButton" class="logout-button" type="button">Sair</button>
     </div>
   </div>
 </header>
@@ -1597,6 +1798,180 @@ const CURRENT_WEEK_END="2026-09-27";
 const CURRENT_WEEK_LABEL="21/09 a 27/09";
 const sb=(window.supabase&&typeof window.supabase.createClient==="function")?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const JUSTIFICATIVAS_ATUAIS=new Map();
+
+const AUTH_LOGIN_MAP={
+  "administrador":"administrador@superintendencia.example",
+  "admin":"administrador@superintendencia.example",
+  "operacional":"operacional@superintendencia.example"
+};
+
+let CURRENT_ACCESS_PROFILE=null;
+let PAINEL_INICIALIZADO=false;
+
+const loginForm=document.getElementById("loginForm");
+const loginUsuario=document.getElementById("loginUsuario");
+const loginSenha=document.getElementById("loginSenha");
+const loginButton=document.getElementById("loginButton");
+const loginError=document.getElementById("loginError");
+const logoutButton=document.getElementById("logoutButton");
+const authUserName=document.getElementById("authUserName");
+const authUserRole=document.getElementById("authUserRole");
+const authRoleBadge=document.getElementById("authRoleBadge");
+
+function mostrarErroLogin(msg){
+  loginError.textContent=String(msg||"Falha ao entrar.");
+  loginError.classList.add("show");
+}
+
+function limparErroLogin(){
+  loginError.textContent="";
+  loginError.classList.remove("show");
+}
+
+function emailInternoDoLogin(usuario){
+  const chave=String(usuario||"").trim().toLowerCase();
+  return AUTH_LOGIN_MAP[chave]||null;
+}
+
+async function carregarPerfilAcesso(userId){
+  const {data,error}=await sb
+    .from("superintendencia_perfis")
+    .select("user_id,nome,perfil,ativo")
+    .eq("user_id",userId)
+    .maybeSingle();
+
+  if(error)throw error;
+  return data;
+}
+
+function aplicarPerfilAcesso(perfil){
+  CURRENT_ACCESS_PROFILE=perfil;
+
+  document.body.classList.remove(
+    "auth-pending",
+    "auth-logged-out",
+    "access-administrador",
+    "access-operacional"
+  );
+
+  const tipo=String(perfil?.perfil||"").toUpperCase();
+
+  if(tipo==="OPERACIONAL"){
+    document.body.classList.add("access-operacional");
+    authRoleBadge.textContent="OPERACIONAL";
+    authUserRole.textContent="Acesso às Tabelas";
+  }else{
+    document.body.classList.add("access-administrador");
+    authRoleBadge.textContent="ADMINISTRADOR";
+    authUserRole.textContent="Acesso completo";
+  }
+
+  authUserName.textContent=perfil?.nome||"Usuário";
+
+  if(!PAINEL_INICIALIZADO){
+    inicializarPainel();
+    PAINEL_INICIALIZADO=true;
+  }
+
+  if(tipo==="OPERACIONAL"){
+    switchView("tables");
+  }else{
+    switchView("general");
+  }
+}
+
+async function concluirSessao(session){
+  if(!session?.user){
+    document.body.classList.remove("auth-pending");
+    document.body.classList.add("auth-logged-out");
+    return;
+  }
+
+  try{
+    const perfil=await carregarPerfilAcesso(session.user.id);
+
+    if(!perfil||!perfil.ativo){
+      await sb.auth.signOut();
+      document.body.classList.remove("auth-pending");
+      document.body.classList.add("auth-logged-out");
+      mostrarErroLogin("Usuário sem perfil ativo para esta plataforma.");
+      return;
+    }
+
+    aplicarPerfilAcesso(perfil);
+  }catch(err){
+    console.error(err);
+    document.body.classList.remove("auth-pending");
+    document.body.classList.add("auth-logged-out");
+    mostrarErroLogin("Não foi possível validar o perfil de acesso.");
+  }
+}
+
+async function bootstrapAuth(){
+  if(!sb){
+    document.body.classList.remove("auth-pending");
+    document.body.classList.add("auth-logged-out");
+    mostrarErroLogin("Serviço de autenticação indisponível.");
+    return;
+  }
+
+  const {data,error}=await sb.auth.getSession();
+
+  if(error){
+    document.body.classList.remove("auth-pending");
+    document.body.classList.add("auth-logged-out");
+    mostrarErroLogin("Não foi possível verificar a sessão.");
+    return;
+  }
+
+  await concluirSessao(data?.session);
+}
+
+loginForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  limparErroLogin();
+
+  const email=emailInternoDoLogin(loginUsuario.value);
+
+  if(!email){
+    mostrarErroLogin("Usuário inválido. Utilize Administrador ou Operacional.");
+    return;
+  }
+
+  loginButton.disabled=true;
+  loginButton.textContent="Entrando...";
+
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({
+      email,
+      password:loginSenha.value
+    });
+
+    if(error)throw error;
+
+    loginSenha.value="";
+    await concluirSessao(data?.session);
+  }catch(err){
+    console.error(err);
+    mostrarErroLogin("Usuário ou senha inválidos.");
+  }finally{
+    loginButton.disabled=false;
+    loginButton.textContent="Entrar";
+  }
+});
+
+logoutButton.addEventListener("click",async()=>{
+  try{
+    await sb.auth.signOut();
+  }finally{
+    CURRENT_ACCESS_PROFILE=null;
+    document.body.classList.remove("access-administrador","access-operacional","auth-pending");
+    document.body.classList.add("auth-logged-out");
+    loginUsuario.value="";
+    loginSenha.value="";
+    limparErroLogin();
+  }
+});
 
 function justKey(periodo,semanaInicio,regiao,coordenacao,indicador){return [periodo,semanaInicio,regiao,coordenacao,indicador].map(v=>String(v??"").trim()).join("¦")}
 function rowJustKey(row){return justKey(CURRENT_PERIOD,CURRENT_WEEK_START,row["Região"],row["Coordenação"],row["Indicador"])}
@@ -2877,6 +3252,14 @@ function setupChartTooltips(){
 setupChartTooltips();
 
 function switchView(view){
+  if(
+    CURRENT_ACCESS_PROFILE &&
+    String(CURRENT_ACCESS_PROFILE.perfil||"").toUpperCase()==="OPERACIONAL" &&
+    view!=="tables"
+  ){
+    view="tables";
+  }
+
   document.querySelectorAll(".view-section").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(el=>el.classList.remove("active"));
 
@@ -2958,13 +3341,17 @@ detailToggle.addEventListener("click",()=>{
     :"Ver detalhes das coordenações&nbsp;&nbsp;→";
 });
 
-if(regionSelect.options.length){
-  regionSelect.value=regionSelect.options[0].value;
-  render(regionSelect.value);
-  renderComparisonAll();
-  populateEvolutionFilters();
-  carregarJustificativasAtuais();
+function inicializarPainel(){
+  if(regionSelect.options.length){
+    regionSelect.value=regionSelect.options[0].value;
+    render(regionSelect.value);
+    renderComparisonAll();
+    populateEvolutionFilters();
+    carregarJustificativasAtuais();
+  }
 }
+
+bootstrapAuth();
 </script>
 
 <div id="chartTooltip" class="chart-tooltip"></div>
